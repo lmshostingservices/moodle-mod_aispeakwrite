@@ -1,0 +1,267 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/feedback
+
+    Feedback on a marked answer: scores, the answer with linked marks, content points and communication.
+
+    Example context (json):
+    {
+        "subid": 9, "cmid": 3, "think": true, "explain": false, "writing": true, "speaking": false,
+        "title": "Geburtstagsfeier", "typelabel": "Email", "draftn": "Draft 1", "modelabel": "Make me think",
+        "summary": "You accept and congratulate. Point 3 is missing.", "score": "27", "max": "45", "exam": "33",
+        "showtelc": true,
+        "criteria": [{"name": "Task", "strict": 9, "exam": 9, "reason": "", "showexam": true,
+            "steps": [{"value": 0, "on": false, "exam": false, "current": false}, {"value": 3, "on": true, "exam": false, "current": false}]}],
+        "paragraphs": [{"segments": [{"plain": true, "text": "Lieber Tim,"}]}],
+        "words": 128,
+        "hasnotes": true, "errorcount": 1, "goodcount": 0,
+        "notes": [{"id": "m0", "n": 1, "error": true, "tag": "Grammar", "tagclass": "neutral", "severity": "major",
+            "quote": "den Einladung", "head": "Which gender is Einladung?", "rule": "-ung is feminine",
+            "hasreveal": true, "hasexamples": true, "examples": [{"text": "die Zeitung"}]}],
+        "haspoints": true, "pointsline": "3 of 4 covered",
+        "points": [{"n": 3, "text": "Angebot, etwas mitzubringen", "quote": "", "comment": "Missing.", "verdict": "Missing",
+            "vclass": "bad", "missing": true, "hasphrases": true, "phrases": [{"text": "Soll ich etwas mitbringen?"}]}],
+        "hascommunication": true, "strengths": [{"text": "Clear informal register"}],
+        "improve": [{"quote": "Ich selbst habe …", "tip": "Start with a detail", "rewrites": [{"label": "Satzanfang", "text": "Mit …"}]}],
+        "vocabulary": [], "own": true, "canrewrite": true, "rewriteurl": "#", "nextmode": "Explain", "backurl": "#"
+    }
+}}
+<div class="asw {{#speaking}}asw-speaking{{/speaking}}" id="asw-feedback-{{subid}}" data-speak="{{speakconfig}}">
+    <div class="asw-row asw-row--between" style="align-items: center;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+            <a class="asw-btn asw-btn--soft" href="{{backurl}}" aria-label="{{#str}}back{{/str}}" style="padding: 0 12px;">
+                <svg class="asw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+            </a>
+            <div>
+                <span class="asw-sub">{{typelabel}} · {{draftn}}</span>
+                <h2 class="asw-h2">{{title}}</h2>
+            </div>
+        </div>
+        <span class="asw-pill {{#think}}asw-pill--warn{{/think}}{{#explain}}asw-pill--blue{{/explain}}">{{modelabel}}</span>
+    </div>
+
+    {{#speaking}}
+    <section class="asw-card" style="flex-direction: row; flex-wrap: wrap; align-items: center; gap: 24px;">
+        <span class="asw-tile" style="width: 64px; height: 64px; border-radius: 20px; {{#understood}}background: var(--asw-good-soft); color: var(--asw-good);{{/understood}}{{#notunderstood}}background: var(--asw-warn-soft); color: var(--asw-warn);{{/notunderstood}}" aria-hidden="true">
+            {{#understood}}<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>{{/understood}}
+            {{#notunderstood}}<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"></path><circle cx="12" cy="12" r="9"></circle></svg>{{/notunderstood}}
+        </span>
+        <div style="flex: 1 1 360px;">
+            <h3 class="asw-h1" style="font-size: 1.5rem;">{{#understood}}{{#str}}youwereunderstood, mod_aispeakwrite{{/str}}{{/understood}}{{#notunderstood}}{{#str}}partlyunderstood, mod_aispeakwrite{{/str}}{{/notunderstood}}</h3>
+            <p class="asw-sub">{{summary}}</p>
+        </div>
+        <div class="asw-row" style="gap: 10px;">
+            <div class="asw-stat"><span class="asw-sub">{{#str}}hardtofollow, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{unclearcount}}</strong></div>
+            <div class="asw-stat" style="background: var(--asw-good-soft);"><span class="asw-sub">{{#str}}selfcorrections, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{selfcount}}</strong></div>
+        </div>
+    </section>
+    {{/speaking}}
+
+    <div class="asw-grid">
+        <section class="asw-card">
+            <span class="asw-label">{{#showtelc}}{{#str}}scorestrictexam, mod_aispeakwrite{{/str}}{{/showtelc}}{{^showtelc}}{{#str}}score, mod_aispeakwrite{{/str}}{{/showtelc}}</span>
+            <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+                <span class="asw-scorebig asw-num">{{score}}</span><span class="asw-sub">/ {{max}}</span>
+                {{#showtelc}}<span class="asw-pill asw-pill--blue asw-num">{{#str}}examscore, mod_aispeakwrite, {{exam}}{{/str}}</span>{{/showtelc}}
+            </div>
+            {{#writing}}<span>{{summary}}</span>{{/writing}}
+        </section>
+        <section class="asw-card" style="grid-column: span 2; min-width: 0;">
+            {{#criteria}}
+                <div class="asw-crit">
+                    <strong>{{name}}</strong>
+                    <div class="asw-steps" aria-hidden="true">
+                        {{#steps}}<span class="{{#on}}asw-step--on{{/on}} {{#exam}}asw-step--exam{{/exam}} {{#current}}asw-step--current{{/current}}"><i></i>{{value}}</span>{{/steps}}
+                    </div>
+                    <span class="asw-num" style="white-space: nowrap;"><strong>{{strict}}</strong>{{#showexam}} <span style="color: var(--asw-blue-text);">({{#str}}examscore, mod_aispeakwrite, {{exam}}{{/str}})</span>{{/showexam}}</span>
+                </div>
+                {{#reason}}<span class="asw-sub" style="margin-top: -6px;">{{reason}}</span>{{/reason}}
+            {{/criteria}}
+        </section>
+    </div>
+
+    {{#think}}{{#own}}
+    <div class="asw-banner asw-banner--warn">
+        <svg class="asw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"></path></svg>
+        <span>{{#writing}}{{#str}}thinkbanner, mod_aispeakwrite{{/str}}{{/writing}}{{#speaking}}{{#str}}thinkbanner_speaking, mod_aispeakwrite{{/str}}{{/speaking}}</span>
+    </div>
+    {{/own}}{{/think}}
+
+    <div class="asw-row">
+        <section class="asw-card asw-card--flush asw-main">
+            <div class="asw-card__head">
+                <strong>{{#writing}}{{#str}}youranswer, mod_aispeakwrite{{/str}}{{/writing}}{{#speaking}}{{#str}}transcript, mod_aispeakwrite{{/str}}{{/speaking}}</strong>
+                <span class="asw-legends">
+                    {{#writing}}
+                    <span class="asw-legend"><span class="asw-legend__line asw-legend__line--error" aria-hidden="true"></span>{{#str}}legend_fix, mod_aispeakwrite{{/str}}</span>
+                    <span class="asw-legend"><span class="asw-legend__line asw-legend__line--good" aria-hidden="true"></span>{{#str}}legend_good, mod_aispeakwrite{{/str}}</span>
+                    {{/writing}}
+                    {{#speaking}}
+                    <span class="asw-legend"><span class="asw-legend__line asw-legend__line--good" aria-hidden="true"></span>{{#str}}legend_self, mod_aispeakwrite{{/str}}</span>
+                    <span class="asw-legend"><span class="asw-legend__line asw-legend__line--warn" aria-hidden="true"></span>{{#str}}legend_form, mod_aispeakwrite{{/str}}</span>
+                    <span class="asw-legend"><span class="asw-legend__line asw-legend__line--error" aria-hidden="true"></span>{{#str}}legend_unclear, mod_aispeakwrite{{/str}}</span>
+                    {{/speaking}}
+                </span>
+            </div>
+            <div class="asw-answer" lang="{{lang}}">
+                {{#paragraphs}}<p>{{> mod_aispeakwrite/segments }}</p>{{/paragraphs}}
+                {{#turns}}
+                    <div class="asw-turn {{#partner}}asw-turn--partner{{/partner}}">
+                        <span class="asw-turn__who" aria-hidden="true">{{#partner}}{{#str}}ai_short, mod_aispeakwrite{{/str}}{{/partner}}{{#learner}}{{#str}}you_short, mod_aispeakwrite{{/str}}{{/learner}}</span>
+                        <p class="asw-turn__text"><span class="asw-sr">{{#partner}}{{#str}}partner, mod_aispeakwrite{{/str}}: {{/partner}}{{#learner}}{{#str}}you, mod_aispeakwrite{{/str}}: {{/learner}}</span>{{> mod_aispeakwrite/segments }}</p>
+                    </div>
+                {{/turns}}
+            </div>
+            <div class="asw-card__foot">
+                <span class="asw-sub">{{#str}}marksummary, mod_aispeakwrite, { "fix": {{errorcount}}, "good": {{goodcount}} } {{/str}}{{#words}} · {{words}} {{#str}}words, mod_aispeakwrite{{/str}}{{/words}}</span>
+                {{#canrewrite}}<a class="asw-btn asw-btn--ink" href="{{rewriteurl}}">{{#str}}rewritenow, mod_aispeakwrite{{/str}}</a>{{/canrewrite}}
+                {{#speaking}}{{#own}}<a class="asw-btn asw-btn--ink" href="{{repeaturl}}">{{#str}}sayitagainwhole, mod_aispeakwrite{{/str}}</a>{{/own}}{{/speaking}}
+            </div>
+            {{#canrewrite}}<div class="asw-sub" style="padding: 0 22px 16px;">{{#str}}nextdraftmode, mod_aispeakwrite, {{nextmode}}{{/str}}</div>{{/canrewrite}}
+        </section>
+
+        <aside class="asw-side" aria-label="{{#str}}feedbacknotes, mod_aispeakwrite{{/str}}">
+            <span class="asw-label">{{#str}}tapamark, mod_aispeakwrite{{/str}}</span>
+            {{^hasnotes}}<p class="asw-sub">{{#str}}nomarks, mod_aispeakwrite{{/str}}</p>{{/hasnotes}}
+            {{#notes}}
+                <div class="asw-note" id="asw-note-{{id}}" data-note="{{id}}">
+                    <button type="button" class="asw-note__btn" data-select="{{id}}">
+                        <span style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%;">
+                            {{#error}}<span class="asw-note__n asw-num">{{n}}</span>{{/error}}
+                            {{^error}}<svg class="asw-note__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>{{/error}}
+                            <span class="asw-pill asw-pill--{{tagclass}}">{{tag}}</span>
+                            {{#severity}}<span class="asw-sub" style="margin-left: auto; font-size: .75rem;">{{severity}}</span>{{/severity}}
+                        </span>
+                        <span class="asw-note__head">{{head}}</span>
+                    </button>
+                    {{#open}}
+                        {{#why}}<span>{{why}}</span>{{/why}}
+                        {{#fix}}<span class="asw-sub">&#8594; {{fix}}</span>{{/fix}}
+                        {{#rule}}<span class="asw-note__rule"><strong>{{#str}}rule, mod_aispeakwrite{{/str}}:</strong> {{rule}}</span>{{/rule}}
+                        {{#hasexamples}}
+                            <span class="asw-sub" style="font-size: .75rem; font-weight: 600;">{{#str}}samerule, mod_aispeakwrite{{/str}}</span>
+                            {{#examples}}<span class="asw-note__example" lang="{{lang}}">{{text}}</span>{{/examples}}
+                        {{/hasexamples}}
+                    {{/open}}
+                    {{^open}}{{#hasreveal}}
+                        <div class="asw-hidden" data-region="reveal-{{id}}" style="display: flex; flex-direction: column; gap: 8px;">
+                            {{#rule}}<span class="asw-note__rule"><strong>{{#str}}rule, mod_aispeakwrite{{/str}}:</strong> {{rule}}</span>{{/rule}}
+                            {{#hasexamples}}
+                                <span class="asw-sub" style="font-size: .75rem; font-weight: 600;">{{#str}}samerule, mod_aispeakwrite{{/str}}</span>
+                                {{#examples}}<span class="asw-note__example" lang="{{lang}}">{{text}}</span>{{/examples}}
+                            {{/hasexamples}}
+                        </div>
+                        <div class="asw-row" style="gap: 8px; align-items: center;">
+                            <button type="button" class="asw-btn asw-btn--line" data-reveal="{{id}}" aria-expanded="false" style="min-height: 36px; font-size: .8125rem;">{{#str}}showexample, mod_aispeakwrite{{/str}}</button>
+                            <span class="asw-sub" style="font-size: .75rem;">{{#str}}answerafterrewrite, mod_aispeakwrite{{/str}}</span>
+                        </div>
+                    {{/hasreveal}}{{/open}}
+                    {{#canrepeat}}
+                        <div class="asw-row" style="gap: 8px; align-items: center;">
+                            <button type="button" class="asw-btn asw-btn--line" data-repeat="{{target}}" style="min-height: 36px; font-size: .8125rem;">{{#str}}sayitagain, mod_aispeakwrite{{/str}}</button>
+                            <span class="asw-sub" data-region="repeat-result" role="status" aria-live="polite"></span>
+                        </div>
+                    {{/canrepeat}}
+                    {{#memory}}<span class="asw-note__memory">{{memory}}</span>{{/memory}}
+                </div>
+            {{/notes}}
+        </aside>
+    </div>
+
+    {{#speaking}}
+    <div class="asw-grid">
+        {{#hasflow}}
+        <section class="asw-card">
+            <span class="asw-label">{{#str}}flow, mod_aispeakwrite{{/str}}</span>
+            <div class="asw-flow" aria-hidden="true">{{#flowbars}}<span class="{{#pause}}asw-flow--pause{{/pause}}" style="height: {{h}}px;"></span>{{/flowbars}}</div>
+            <span class="asw-sub">{{#str}}flowline, mod_aispeakwrite, { "pauses": {{longpauses}}, "wpm": {{wpm}}, "duration": {{#quote}}{{duration}}{{/quote}} } {{/str}}</span>
+            {{#fluency}}<span>{{fluency}}</span>{{/fluency}}
+        </section>
+        {{/hasflow}}
+        {{#haspronunciation}}
+        <section class="asw-card">
+            <span class="asw-label">{{#str}}wordstopractise, mod_aispeakwrite{{/str}}</span>
+            {{#pronunciation}}
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button type="button" class="asw-btn asw-btn--line" data-listen="{{word}}" aria-label="{{#str}}listento, mod_aispeakwrite, {{word}}{{/str}}" style="min-height: 36px; padding: 0 12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+                    </button>
+                    <span><strong lang="{{lang}}">{{word}}</strong><br><span class="asw-sub">{{tip}}</span></span>
+                </div>
+            {{/pronunciation}}
+            <span class="asw-sub" style="font-size: .75rem;">{{#str}}accentfine, mod_aispeakwrite{{/str}}</span>
+        </section>
+        {{/haspronunciation}}
+    </div>
+    {{/speaking}}
+
+    {{#haspoints}}
+    <section class="asw-card">
+        <div class="asw-row asw-row--between" style="align-items: baseline;">
+            <h3 class="asw-h2">{{#str}}contentpoints, mod_aispeakwrite{{/str}}</h3>
+            <span class="asw-sub">{{pointsline}}</span>
+        </div>
+        <div class="asw-grid">
+            {{#points}}
+                <div class="asw-pointbox {{#missing}}asw-pointbox--missing{{/missing}}">
+                    <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center;">
+                        <strong>{{n}}. {{text}}</strong>
+                        <span class="asw-pill asw-pill--{{vclass}}">{{verdict}}</span>
+                    </div>
+                    {{#quote}}<span class="asw-quote" lang="{{lang}}">„{{quote}}“</span>{{/quote}}
+                    {{#comment}}<span class="asw-sub">{{comment}}</span>{{/comment}}
+                    {{#hasphrases}}
+                        <span class="asw-sub" style="font-size: .75rem; font-weight: 600;">{{#str}}phrasesyoucoulduse, mod_aispeakwrite{{/str}}</span>
+                        <div class="asw-row" style="gap: 6px;">{{#phrases}}<span class="asw-pill asw-pill--line" lang="{{lang}}">{{text}}</span>{{/phrases}}</div>
+                    {{/hasphrases}}
+                </div>
+            {{/points}}
+        </div>
+    </section>
+    {{/haspoints}}
+
+    {{#hascommunication}}
+    <section class="asw-card">
+        <h3 class="asw-h2">{{#str}}communication, mod_aispeakwrite{{/str}}</h3>
+        <div class="asw-grid">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span class="asw-label" style="color: var(--asw-good);">{{#str}}goodforlevel, mod_aispeakwrite{{/str}}</span>
+                {{#strengths}}
+                    <span style="display: flex; gap: 8px;"><svg class="asw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="color: var(--asw-good);"><path d="M20 6 9 17l-5-5"></path></svg>{{text}}</span>
+                {{/strengths}}
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <span class="asw-label" style="color: var(--asw-warn);">{{#str}}saybetter, mod_aispeakwrite{{/str}}</span>
+                {{#improve}}
+                    {{#quote}}<span class="asw-quote" lang="{{lang}}">{{#str}}youwrote, mod_aispeakwrite{{/str}} „{{quote}}“</span>{{/quote}}
+                    {{#tip}}<span>{{tip}}</span>{{/tip}}
+                    {{#rewrites}}
+                        <div class="asw-rewrite">
+                            {{#label}}<span class="asw-sub" style="font-size: .75rem; font-weight: 600;">{{label}}</span>{{/label}}
+                            <span lang="{{lang}}">{{text}}</span>
+                        </div>
+                    {{/rewrites}}
+                {{/improve}}
+                {{#vocabulary}}
+                    <span>{{#str}}vocabline, mod_aispeakwrite, { "word": {{#quote}}{{word}}{{/quote}}, "count": {{count}} } {{/str}} <span lang="{{lang}}">{{alternatives}}</span></span>
+                {{/vocabulary}}
+            </div>
+        </div>
+    </section>
+    {{/hascommunication}}
+</div>

@@ -1,0 +1,130 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/writer
+
+    The writing screen.
+
+    Example context (json):
+    {
+        "cmid": 3, "subid": 9, "title": "Geburtstagsfeier", "typelabel": "Email", "draftn": "Draft 1",
+        "modelabel": "Make me think", "modeexplain": "Hints only.", "content": "Lieber Tim,", "notes": "", "words": 2,
+        "pending": false, "minutes": 30,
+        "phases": [{"label": "Read", "min": 3, "phase": "read"}, {"label": "Write", "min": 15, "phase": "write"}],
+        "haschecks": true, "checks": [{"name": "Satzanfang", "tip": "Start with a detail"}],
+        "hasgroups": true, "groups": [{"name": "Closing", "items": [{"text": "Liebe Grüße"}]}],
+        "keys": [{"key": "ä"}], "markingsleft": "2 of 3 markings left today", "nomarkings": false,
+        "hasguide": false, "guide": "", "backurl": "#", "lang": "de-DE",
+        "hassituation": false, "hassource": false, "haspoints": false, "targetwords": 150
+    }
+}}
+<div class="asw" id="asw-writer-{{subid}}" data-cmid="{{cmid}}" data-subid="{{subid}}">
+    <div class="asw-row asw-row--between" style="align-items: center;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+            <a class="asw-btn asw-btn--soft" href="{{backurl}}" aria-label="{{#str}}back{{/str}}" style="padding: 0 12px;">
+                <svg class="asw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+            </a>
+            <div>
+                <span class="asw-sub">{{typelabel}} · {{draftn}}</span>
+                <h2 class="asw-h2">{{title}}</h2>
+            </div>
+        </div>
+        <div class="asw-row" style="gap: 8px; align-items: center;">
+            <span class="asw-pill asw-pill--neutral" data-region="clock" aria-live="off"><span class="asw-num" data-region="elapsed">0:00</span></span>
+            <span class="asw-pill asw-pill--line">{{#str}}mode, mod_aispeakwrite{{/str}}: <strong>{{modelabel}}</strong></span>
+        </div>
+    </div>
+
+    {{> mod_aispeakwrite/task_panel }}
+
+    <div class="asw-row">
+        <section class="asw-card asw-card--flush asw-main">
+            <div class="asw-card__head">
+                <label for="asw-answer-{{subid}}" style="font-weight: 600; margin: 0;">{{#str}}youranswer, mod_aispeakwrite{{/str}}</label>
+                <span class="asw-sub"><strong class="asw-num" data-region="words">{{words}}</strong> {{#targetwords}}/ ~{{targetwords}}{{/targetwords}} {{#str}}words, mod_aispeakwrite{{/str}}</span>
+            </div>
+            <textarea class="asw-editor" id="asw-answer-{{subid}}" data-region="answer" lang="{{lang}}" spellcheck="false" {{#pending}}readonly{{/pending}}>{{content}}</textarea>
+            {{#haskeys}}
+            <div class="asw-card__foot" style="justify-content: flex-start;">
+                <div class="asw-row" style="gap: 6px;" role="group" aria-label="{{#str}}specialcharacters, mod_aispeakwrite{{/str}}">
+                    {{#keys}}<button type="button" class="asw-key" data-insert="{{key}}">{{key}}</button>{{/keys}}
+                </div>
+                <span class="asw-sub" style="margin-left: auto;" data-region="saved" aria-live="polite"></span>
+            </div>
+            {{/haskeys}}
+            {{^haskeys}}<div class="asw-card__foot"><span class="asw-sub" data-region="saved" aria-live="polite"></span></div>{{/haskeys}}
+        </section>
+
+        <aside class="asw-side">
+            <section class="asw-card">
+                <span class="asw-label">{{#str}}yourtime, mod_aispeakwrite, {{minutes}}{{/str}}</span>
+                <div class="asw-phases" data-region="phases" data-minutes="{{minutes}}" style="grid-template-columns: {{#phases}}{{min}}fr {{/phases}};">
+                    {{#phases}}<span data-phase="{{phase}}" data-min="{{min}}"></span>{{/phases}}
+                </div>
+                <div class="asw-phases" style="grid-template-columns: {{#phases}}{{min}}fr {{/phases}};">
+                    {{#phases}}<small class="asw-sub">{{label}}</small>{{/phases}}
+                </div>
+            </section>
+
+            {{#haschecks}}
+            <section class="asw-card">
+                <span class="asw-label">{{#str}}checkbefore, mod_aispeakwrite{{/str}}</span>
+                {{#checks}}
+                    <label class="asw-check"><input type="checkbox"><span><strong>{{name}}:</strong> {{tip}}</span></label>
+                {{/checks}}
+            </section>
+            {{/haschecks}}
+
+            {{#hasgroups}}
+            <section class="asw-card">
+                <span class="asw-label">{{#str}}usefulphrases, mod_aispeakwrite{{/str}}</span>
+                {{#groups}}
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        {{#name}}<strong style="font-size: .8125rem;">{{name}}</strong>{{/name}}
+                        <div class="asw-row" style="gap: 6px;">
+                            {{#items}}<button type="button" class="asw-chip asw-chip--phrase" data-insert="{{text}}">{{text}}</button>{{/items}}
+                        </div>
+                    </div>
+                {{/groups}}
+            </section>
+            {{/hasgroups}}
+
+            {{#hasguide}}
+            <section class="asw-card">
+                <span class="asw-label">{{#str}}howtoapproach, mod_aispeakwrite{{/str}}</span>
+                <div class="asw-sub">{{{guide}}}</div>
+            </section>
+            {{/hasguide}}
+
+            <section class="asw-card">
+                <label class="asw-label" for="asw-notes-{{subid}}">{{#str}}draftnote, mod_aispeakwrite{{/str}}</label>
+                <textarea class="asw-notes" id="asw-notes-{{subid}}" data-region="notes" placeholder="{{#str}}draftnote_placeholder, mod_aispeakwrite{{/str}}">{{notes}}</textarea>
+            </section>
+        </aside>
+    </div>
+
+    <div class="asw-card asw-submitbar">
+        <span style="flex: 1 1 280px;">{{modeexplain}}</span>
+        {{#markingsleft}}<span class="asw-sub">{{markingsleft}}</span>{{/markingsleft}}
+        <div data-region="status" role="status" aria-live="polite" class="asw-sub"></div>
+        <button type="button" class="asw-btn asw-btn--ink" data-action="submit" {{#nomarkings}}disabled{{/nomarkings}}>
+            {{#pending}}{{#str}}checkagain, mod_aispeakwrite{{/str}}{{/pending}}{{^pending}}{{#str}}submitforfeedback, mod_aispeakwrite{{/str}}{{/pending}}
+        </button>
+    </div>
+    {{#nomarkings}}<div class="asw-banner asw-banner--warn">{{#str}}dailylimitreached, mod_aispeakwrite{{/str}}</div>{{/nomarkings}}
+    {{#pending}}<div class="asw-banner asw-banner--info">{{#str}}stillmarking, mod_aispeakwrite{{/str}}</div>{{/pending}}
+</div>

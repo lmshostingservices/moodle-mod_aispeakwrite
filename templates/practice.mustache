@@ -1,0 +1,93 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/practice
+
+    Practice library: task types and prompt cards, filtered by status in the browser.
+
+    Example context (json):
+    {
+        "cmid": 3,
+        "onpractice": true,
+        "tabs": [{"label": "Writing", "url": "#", "active": true}, {"label": "Speaking", "url": "#", "active": false}],
+        "types": [{"name": "Email", "desc": "Four content points", "url": "#", "done": "1 / 4", "mastery": 62,
+            "dash": "82 132", "good": true}],
+        "listtitle": "Email prompts",
+        "hascards": true,
+        "cards": [{"title": "Geburtstagsfeier", "topic": "Feste", "sub": "Email", "best": "Best 60%", "due": "30 Oct",
+            "assigned": true, "band": "band0", "url": "#", "status": "keep", "statuslabel": "Keep practising",
+            "statusclass": "warn"}]
+    }
+}}
+<div class="asw" id="asw-practice">
+    {{> mod_aispeakwrite/nav }}
+    <div class="asw-row asw-row--between">
+        <div>
+            <h2 class="asw-h1">{{#str}}practice, mod_aispeakwrite{{/str}}</h2>
+            <p class="asw-sub">{{#str}}practice_sub, mod_aispeakwrite{{/str}}</p>
+        </div>
+        <nav class="asw-tabs" aria-label="{{#str}}skill, mod_aispeakwrite{{/str}}">
+            {{#tabs}}<a href="{{url}}" {{#active}}aria-current="page"{{/active}}>{{label}}</a>{{/tabs}}
+        </nav>
+    </div>
+
+    <div class="asw-grid">
+        {{#types}}
+            <a class="asw-card asw-prompt" href="{{url}}" style="padding: 20px; gap: 14px;">
+                <div style="display: flex; justify-content: space-between; gap: 12px;">
+                    <strong style="font-size: 1.0625rem;">{{name}}</strong>
+                    <svg class="asw-ring" width="52" height="52" viewBox="0 0 52 52" role="img" aria-label="{{#str}}mastery, mod_aispeakwrite{{/str}} {{mastery}}">
+                        <circle class="asw-ring__track" cx="26" cy="26" r="21" fill="none" stroke-width="5"></circle>
+                        <circle class="asw-ring__value {{^good}}asw-ring__value--warn{{/good}}" cx="26" cy="26" r="21" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{dash}}" transform="rotate(-90 26 26)"></circle>
+                        <text x="26" y="30" text-anchor="middle" font-size="12" font-weight="600">{{mastery}}</text>
+                    </svg>
+                </div>
+                <span class="asw-sub">{{desc}}</span>
+                <span class="asw-sub"><strong class="asw-num">{{done}}</strong> {{#str}}done, mod_aispeakwrite{{/str}}</span>
+            </a>
+        {{/types}}
+    </div>
+
+    <div class="asw-row asw-row--between" style="align-items: center;">
+        <h3 class="asw-h2">{{listtitle}}</h3>
+        <div class="asw-row" style="gap: 8px;" role="group" aria-label="{{#str}}filterstatus, mod_aispeakwrite{{/str}}" data-region="filters">
+            <button type="button" class="asw-chip" aria-pressed="true" data-filter="all">{{#str}}all{{/str}}</button>
+            <button type="button" class="asw-chip" aria-pressed="false" data-filter="open">{{#str}}status_open, mod_aispeakwrite{{/str}}</button>
+            <button type="button" class="asw-chip" aria-pressed="false" data-filter="keep">{{#str}}status_keep, mod_aispeakwrite{{/str}}</button>
+            <button type="button" class="asw-chip" aria-pressed="false" data-filter="done">{{#str}}status_done, mod_aispeakwrite{{/str}}</button>
+        </div>
+    </div>
+    {{^hascards}}<div class="asw-banner asw-banner--info">{{#str}}notasksyet, mod_aispeakwrite{{/str}}</div>{{/hascards}}
+    <div class="asw-grid asw-grid--tight" data-region="cards">
+        {{#cards}}
+            <a class="asw-card asw-prompt" href="{{url}}" data-status="{{status}}">
+                <div class="asw-prompt__band asw-{{band}}">
+                    <span class="asw-prompt__topic">{{topic}}</span>
+                    {{#assigned}}<span class="asw-pill asw-pill--ink">{{#str}}due, mod_aispeakwrite{{/str}} {{due}}</span>{{/assigned}}
+                </div>
+                <div class="asw-prompt__body">
+                    <strong>{{title}}</strong>
+                    <span class="asw-sub">{{sub}}</span>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <span class="asw-pill asw-pill--{{statusclass}}">{{statuslabel}}</span>
+                        <span class="asw-sub asw-num">{{best}}</span>
+                    </div>
+                </div>
+            </a>
+        {{/cards}}
+    </div>
+</div>

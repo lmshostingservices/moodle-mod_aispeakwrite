@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="mod/aispeakwrite/db" VERSION="20261026" COMMENT="XMLDB file for mod_aispeakwrite"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="aispeakwrite" COMMENT="One AI Advent Speaking and Writing activity">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="correctionmode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="two" SEQUENCE="false" COMMENT="two, think or explain"/>
+        <FIELD NAME="showtelc" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="showgood" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="sendhistory" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="dailylimit" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="3" SEQUENCE="false" COMMENT="Markings per learner per day, 0 = no limit"/>
+        <FIELD NAME="rewritelimit" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="2" SEQUENCE="false" COMMENT="Rewrites per task after the first draft"/>
+        <FIELD NAME="activitytips" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="examlevel" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="B1" SEQUENCE="false"/>
+        <FIELD NAME="targetlang" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="de-DE" SEQUENCE="false" COMMENT="Language being learned (BCP-47)"/>
+        <FIELD NAME="feedbacklang" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Empty = the learner's Moodle language"/>
+        <FIELD NAME="examdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="grade" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="100" SEQUENCE="false"/>
+        <FIELD NAME="completionmarked" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Number of tasks to get marked for completion"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="aispeakwrite_task" COMMENT="A writing prompt or speaking topic">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="aispeakwriteid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="kind" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="writing" SEQUENCE="false" COMMENT="writing or speaking"/>
+        <FIELD NAME="tasktype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="email" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="topic" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="situation" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sourcetext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="points" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Content points, one per line"/>
+        <FIELD NAME="formality" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="du" SEQUENCE="false" COMMENT="du, sie or any"/>
+        <FIELD NAME="targetwords" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="150" SEQUENCE="false"/>
+        <FIELD NAME="timelimit" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="30" SEQUENCE="false" COMMENT="Minutes"/>
+        <FIELD NAME="tasktips" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="guide" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="How to approach this"/>
+        <FIELD NAME="phrases" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Group: phrase | phrase, one group per line"/>
+        <FIELD NAME="partnerbrief" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Speaking: the AI partner's role and opinion"/>
+        <FIELD NAME="audience" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="all" SEQUENCE="false" COMMENT="all, group or selected"/>
+        <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="duedate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="aispeakwriteid" TYPE="foreign" FIELDS="aispeakwriteid" REFTABLE="aispeakwrite" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="aispeakwrite_taskuser" COMMENT="Learners a task is assigned to">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="taskid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="duedate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="assignedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="taskid" TYPE="foreign" FIELDS="taskid" REFTABLE="aispeakwrite_task" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="taskuser" UNIQUE="true" FIELDS="taskid, userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="aispeakwrite_sub" COMMENT="A learner's draft or marked answer">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="aispeakwriteid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="taskid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attempt" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Draft number"/>
+        <FIELD NAME="kind" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="writing" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="12" NOTNULL="true" DEFAULT="draft" SEQUENCE="false" COMMENT="draft, pending, marked or failed"/>
+        <FIELD NAME="content" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Text written, or the speaking transcript as JSON"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Learner's draft note"/>
+        <FIELD NAME="fbmode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="think" SEQUENCE="false" COMMENT="think or explain"/>
+        <FIELD NAME="metrics" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON: words, speaking time, pauses"/>
+        <FIELD NAME="feedback" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Validated feedback JSON"/>
+        <FIELD NAME="contenthash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="score" TYPE="number" LENGTH="6" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Strict school score"/>
+        <FIELD NAME="examscore" TYPE="number" LENGTH="6" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Realistic exam score"/>
+        <FIELD NAME="maxscore" TYPE="number" LENGTH="6" NOTNULL="false" SEQUENCE="false" DECIMALS="2"/>
+        <FIELD NAME="tipsversion" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemarked" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="aispeakwriteid" TYPE="foreign" FIELDS="aispeakwriteid" REFTABLE="aispeakwrite" REFFIELDS="id"/>
+        <KEY NAME="taskid" TYPE="foreign" FIELDS="taskid" REFTABLE="aispeakwrite_task" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="taskuserattempt" UNIQUE="false" FIELDS="taskid, userid, attempt"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="aispeakwrite_memory" COMMENT="Per-learner record of each tip or grammar pattern">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="aispeakwriteid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="patternkey" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="label" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ptype" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="grammar" SEQUENCE="false" COMMENT="tip, grammar or content"/>
+        <FIELD NAME="hits" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="misses" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="recent" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Last results, newest last: 1 right, 0 missed"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="aispeakwriteid" TYPE="foreign" FIELDS="aispeakwriteid" REFTABLE="aispeakwrite" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userpattern" UNIQUE="true" FIELDS="aispeakwriteid, userid, patternkey"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="aispeakwrite_op" COMMENT="Paid LMS Labs requests, saved with their key before sending">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="aispeakwriteid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="kind" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="mark, converse or test"/>
+        <FIELD NAME="itemid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="bodyhash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Exact request body while pending, emptied when finished"/>
+        <FIELD NAME="idemkey" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="12" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending, complete, failed, expired"/>
+        <FIELD NAME="credits" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="aispeakwriteid" TYPE="foreign" FIELDS="aispeakwriteid" REFTABLE="aispeakwrite" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="claim" UNIQUE="false" FIELDS="aispeakwriteid, userid, kind, itemid, state"/>
+        <INDEX NAME="idemkey" UNIQUE="true" FIELDS="idemkey"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

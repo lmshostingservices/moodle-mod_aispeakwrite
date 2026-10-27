@@ -1,0 +1,115 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/analytics
+
+    Class analytics.
+
+    Example context (json):
+    {
+        "cmid": 3, "onanalytics": true, "learnercount": 14,
+        "kpis": [{"label": "Marked (writing / speaking)", "value": "212 / 25", "note": "Last 30 days"}],
+        "hasissues": true,
+        "issues": [{"label": "Satzanfang", "type": "School tip", "pct": 64, "selected": true, "url": "#"}],
+        "current": {"label": "Satzanfang", "type": "School tip", "key": "tip:satzanfang", "haspeople": true,
+            "peopleline": "3 learners", "people": [{"name": "Justus", "recentpct": 40, "line": "2 of 5 right",
+            "userid": 5}], "userids": "5", "hastasks": true, "tasks": [{"id": 1, "name": "Konnektoren"}],
+            "actionurl": "#", "sesskey": "x", "group": 0, "defaultdue": "2026-11-02"},
+        "hasgrid": true, "tipcols": [{"label": "Satzanfang"}],
+        "grid": [{"name": "Justus", "cells": [{"value": "2/5", "state": "focus"}]}],
+        "hasbalance": true, "balance": "4,820", "lowcredits": false, "usedmonth": 312, "markings": 212, "partnerturns": 90
+    }
+}}
+<div class="asw">
+    {{> mod_aispeakwrite/teachernav }}
+    <div>
+        <h2 class="asw-h1">{{#str}}analytics, mod_aispeakwrite{{/str}}</h2>
+        <p class="asw-sub">{{#str}}analytics_sub, mod_aispeakwrite, {{learnercount}}{{/str}}</p>
+    </div>
+    <div class="asw-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        {{#kpis}}
+            <section class="asw-card" style="gap: 6px;">
+                <span class="asw-label">{{label}}</span>
+                <span class="asw-kpi asw-num">{{value}}</span>
+                <span class="asw-sub">{{note}}</span>
+            </section>
+        {{/kpis}}
+    </div>
+
+    <div class="asw-row">
+        <section class="asw-card asw-main" style="gap: 4px;">
+            <div class="asw-row asw-row--between" style="align-items: baseline; padding: 0 4px 8px;">
+                <h3 class="asw-h2">{{#str}}commonmistakes, mod_aispeakwrite{{/str}}</h3>
+                <span class="asw-sub">{{#str}}commonmistakes_sub, mod_aispeakwrite{{/str}}</span>
+            </div>
+            {{^hasissues}}<p class="asw-sub">{{#str}}noissuesyet, mod_aispeakwrite{{/str}}</p>{{/hasissues}}
+            {{#issues}}
+                <a class="asw-issue" href="{{url}}" {{#selected}}aria-current="true"{{/selected}}>
+                    <span><strong>{{label}}</strong><br><span class="asw-sub">{{type}}</span></span>
+                    <span class="asw-bar"><span style="width: {{pct}}%;"></span></span>
+                    <strong class="asw-num" style="text-align: right;">{{pct}}%</strong>
+                </a>
+            {{/issues}}
+        </section>
+
+        {{#current}}
+        <section class="asw-card asw-side" style="flex: 1 1 400px;">
+            <span class="asw-label">{{type}}</span>
+            <h3 class="asw-h2">{{label}}</h3>
+            <span class="asw-sub">{{peopleline}}</span>
+            {{#people}}
+                <div class="asw-focus">
+                    <strong style="flex: 1;">{{name}}</strong>
+                    <span class="asw-progress" aria-hidden="true"><span style="width: {{recentpct}}%;"></span></span>
+                    <span class="asw-sub">{{line}}</span>
+                </div>
+            {{/people}}
+            {{#haspeople}}{{#hastasks}}
+            <form method="post" action="{{actionurl}}" class="asw-card" style="box-shadow: none; background: var(--asw-soft-2);">
+                <input type="hidden" name="id" value="{{cmid}}">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <input type="hidden" name="assign" value="1">
+                <input type="hidden" name="issue" value="{{key}}">
+                <input type="hidden" name="userids" value="{{userids}}">
+                <strong>{{#str}}assignpractice, mod_aispeakwrite{{/str}}</strong>
+                <label for="asw-assign-task" class="asw-sub">{{#str}}assigntask, mod_aispeakwrite{{/str}}</label>
+                <select id="asw-assign-task" name="taskid" class="custom-select form-select">{{#tasks}}<option value="{{id}}">{{name}}</option>{{/tasks}}</select>
+                <label for="asw-assign-due" class="asw-sub">{{#str}}due, mod_aispeakwrite{{/str}}</label>
+                <input id="asw-assign-due" type="date" name="due" value="{{defaultdue}}" class="form-control">
+                <button type="submit" class="asw-btn asw-btn--ink">{{#str}}assigntothese, mod_aispeakwrite{{/str}}</button>
+            </form>
+            {{/hastasks}}{{/haspeople}}
+        </section>
+        {{/current}}
+    </div>
+
+    {{#hasgrid}}
+    <section class="asw-card">
+        <h3 class="asw-h2">{{#str}}learnersbytips, mod_aispeakwrite{{/str}}</h3>
+        <div class="asw-scroll">
+            <table class="asw-heat">
+                <thead><tr><th scope="col" style="text-align: left;">{{#str}}learner, mod_aispeakwrite{{/str}}</th>{{#tipcols}}<th scope="col">{{label}}</th>{{/tipcols}}</tr></thead>
+                <tbody>
+                    {{#grid}}<tr><th scope="row">{{name}}</th>{{#cells}}<td class="asw-cell--{{state}}">{{value}}</td>{{/cells}}</tr>{{/grid}}
+                </tbody>
+            </table>
+        </div>
+        <span class="asw-sub">{{#str}}heatlegend, mod_aispeakwrite{{/str}}</span>
+    </section>
+    {{/hasgrid}}
+    {{> mod_aispeakwrite/usage }}
+</div>

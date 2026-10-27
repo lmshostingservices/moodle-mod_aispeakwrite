@@ -1,0 +1,31 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/segments
+
+    One line of the learner's answer: plain text and marks. Kept on one line so no stray spaces appear.
+
+    Example context (json):
+    {
+        "segments": [
+            {"plain": true, "text": "vielen Dank für "},
+            {"mark": true, "id": "m0", "n": 1, "kind": "error", "error": true, "text": "den Einladung",
+                "showcorrection": true, "correction": "die Einladung"}
+        ]
+    }
+}}
+{{#segments}}{{#plain}}{{text}}{{/plain}}{{#mark}}<button type="button" class="asw-mark asw-mark--{{kind}}" data-mark="{{id}}" aria-describedby="asw-note-{{id}}">{{#showcorrection}}<s>{{text}}</s> <ins>{{correction}}</ins>{{/showcorrection}}{{^showcorrection}}{{text}}{{/showcorrection}}{{#error}}<sup class="asw-ref">{{n}}</sup>{{/error}}</button>{{/mark}}{{/segments}}

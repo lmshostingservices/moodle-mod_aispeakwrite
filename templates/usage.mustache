@@ -1,0 +1,37 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/usage
+
+    Credit usage cards for teachers.
+
+    Example context (json):
+    {
+        "hasbalance": true, "balance": "4,820", "lowcredits": false, "usedmonth": 312, "markings": 212, "partnerturns": 90
+    }
+}}
+<section class="asw-card">
+    <span class="asw-label">{{#str}}credits, mod_aispeakwrite{{/str}}</span>
+    {{#lowcredits}}<div class="asw-banner asw-banner--warn">{{#str}}lowcreditswarning, mod_aispeakwrite{{/str}}</div>{{/lowcredits}}
+    <div class="asw-row" style="gap: 12px;">
+        <div class="asw-stat"><span class="asw-sub">{{#str}}balance, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{#hasbalance}}{{balance}}{{/hasbalance}}{{^hasbalance}}–{{/hasbalance}}</strong></div>
+        <div class="asw-stat"><span class="asw-sub">{{#str}}usedthismonth, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{usedmonth}}</strong></div>
+        <div class="asw-stat"><span class="asw-sub">{{#str}}markingsthismonth, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{markings}}</strong></div>
+        <div class="asw-stat"><span class="asw-sub">{{#str}}partnerturnsthismonth, mod_aispeakwrite{{/str}}</span><strong class="asw-num">{{partnerturns}}</strong></div>
+    </div>
+    <span class="asw-sub">{{#str}}creditsexplained, mod_aispeakwrite{{/str}}</span>
+</section>

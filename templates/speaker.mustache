@@ -1,0 +1,130 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/speaker
+
+    The speaking screen. Speech recognition runs in the learner's browser.
+
+    Example context (json):
+    {
+        "cmid": 3, "subid": 12, "title": "Abschiedsfeier", "typelabel": "Speaking · Part 3", "pending": false,
+        "conversation": true, "minutes": 5, "hastips": true, "tipline": "entweder … oder · zwar … aber",
+        "markingsleft": "2 of 3 markings left today", "nomarkings": false, "backurl": "#",
+        "config": "{}", "hassituation": true, "situation": "Planen Sie gemeinsam.", "hassource": false,
+        "haspoints": true, "points": [{"n": 1, "text": "Wann?", "min": ""}], "targetwords": 0
+    }
+}}
+<div class="asw asw-speaking" id="asw-speaker-{{subid}}" data-config="{{config}}">
+    <div class="asw-row asw-row--between" style="align-items: center;">
+        <div style="display: flex; gap: 14px; align-items: center;">
+            <a class="asw-btn asw-btn--soft" href="{{backurl}}" aria-label="{{#str}}back{{/str}}" style="padding: 0 12px;">
+                <svg class="asw-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+            </a>
+            <div>
+                <span class="asw-sub">{{typelabel}}</span>
+                <h2 class="asw-h2">{{title}}</h2>
+            </div>
+        </div>
+        <span class="asw-pill asw-pill--line asw-hidden" data-region="live"><svg class="asw-icon asw-icon--sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg> {{#str}}live, mod_aispeakwrite{{/str}} · <span class="asw-num" data-region="clock">0:00</span></span>
+    </div>
+
+    <div class="asw-row">
+        <div class="asw-side" style="flex: 1 1 340px;">
+            {{> mod_aispeakwrite/task_panel }}
+            {{#hastips}}
+            <section class="asw-card">
+                <span class="asw-label">{{#str}}tipsforthispart, mod_aispeakwrite{{/str}}</span>
+                <span>{{tipline}}</span>
+            </section>
+            {{/hastips}}
+        </div>
+
+        <section class="asw-card asw-stage asw-main" data-region="stage">
+            <div class="asw-banner asw-banner--bad asw-hidden" data-region="unsupported" style="width: 100%;">{{#str}}browserunsupported, mod_aispeakwrite{{/str}}</div>
+            {{#pending}}<div class="asw-banner asw-banner--info" style="width: 100%;">{{#str}}stillmarking, mod_aispeakwrite{{/str}}</div>{{/pending}}
+
+            <div data-region="setup" style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 18px;">
+                <div class="asw-card" style="box-shadow: none; background: var(--asw-soft-2);">
+                    <span class="asw-label">{{#str}}microphone, mod_aispeakwrite{{/str}}</span>
+                    <div class="asw-meter" data-region="meter" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="asw-sub" data-region="micstatus" role="status" aria-live="polite">{{#str}}miccheck, mod_aispeakwrite{{/str}}</span>
+                    <button type="button" class="asw-btn asw-btn--line" data-action="mictest">{{#str}}testmic, mod_aispeakwrite{{/str}}</button>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <span class="asw-label">{{#str}}mode, mod_aispeakwrite{{/str}}</span>
+                    <div class="asw-row" style="gap: 10px;" role="group" aria-label="{{#str}}mode, mod_aispeakwrite{{/str}}">
+                        <button type="button" class="asw-opt" data-mode="training" aria-pressed="true">
+                            <strong>{{#str}}mode_training, mod_aispeakwrite{{/str}}</strong>
+                            <span class="asw-sub">{{#str}}mode_training_desc, mod_aispeakwrite{{/str}}</span>
+                        </button>
+                        <button type="button" class="asw-opt" data-mode="exam" aria-pressed="false">
+                            <strong>{{#str}}mode_exam, mod_aispeakwrite{{/str}}</strong>
+                            <span class="asw-sub">{{#str}}mode_exam_desc, mod_aispeakwrite, {{minutes}}{{/str}}</span>
+                        </button>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+                    {{#conversation}}<strong>{{#str}}whostarts, mod_aispeakwrite{{/str}}</strong>{{/conversation}}
+                    <div class="asw-row" style="gap: 10px; justify-content: center;">
+                        <button type="button" class="asw-btn asw-btn--ink" data-action="start" data-who="learner" {{#nomarkings}}disabled{{/nomarkings}}>{{#conversation}}{{#str}}illstart, mod_aispeakwrite{{/str}}{{/conversation}}{{^conversation}}{{#str}}startspeaking, mod_aispeakwrite{{/str}}{{/conversation}}</button>
+                        {{#conversation}}<button type="button" class="asw-btn asw-btn--soft" data-action="start" data-who="partner" {{#nomarkings}}disabled{{/nomarkings}}>{{#str}}partnerstarts, mod_aispeakwrite{{/str}}</button>{{/conversation}}
+                    </div>
+                    {{#markingsleft}}<span class="asw-sub">{{markingsleft}}</span>{{/markingsleft}}
+                    {{#nomarkings}}<span class="asw-sub">{{#str}}dailylimitreached, mod_aispeakwrite{{/str}}</span>{{/nomarkings}}
+                    <span class="asw-sub" style="text-align: center; font-size: .8125rem;">{{#str}}speechprivacy, mod_aispeakwrite{{/str}}</span>
+                </div>
+            </div>
+
+            <div data-region="session" class="asw-hidden" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px;">
+                <div class="asw-nodes">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <span class="asw-node" data-region="node-learner">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg>
+                        </span>
+                        <strong>{{#str}}you, mod_aispeakwrite{{/str}}</strong>
+                    </div>
+                    {{#conversation}}
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <span class="asw-node asw-node--partner" data-region="node-partner" aria-hidden="true">{{#str}}ai_short, mod_aispeakwrite{{/str}}</span>
+                        <strong>{{#str}}partner, mod_aispeakwrite{{/str}}</strong>
+                    </div>
+                    {{/conversation}}
+                </div>
+                <div class="asw-card" style="box-shadow: none; background: var(--asw-soft-2); width: 100%; max-width: 560px; align-items: center;">
+                    <strong data-region="status" role="status" aria-live="polite"></strong>
+                    <div class="asw-meter" data-region="meter2" aria-hidden="true">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <span class="asw-sub" data-region="interim" lang="{{lang}}"></span>
+                </div>
+                <button type="button" class="asw-btn asw-btn--ink" data-action="turn" style="min-width: 220px; align-self: center;">{{#str}}speak, mod_aispeakwrite{{/str}}</button>
+                <div class="asw-transcript" data-region="transcript" aria-live="polite"></div>
+                <div style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; justify-content: space-between;"><span class="asw-sub">{{#str}}timeremaining, mod_aispeakwrite{{/str}}</span><strong class="asw-num" data-region="remaining"></strong></div>
+                    <div class="asw-bar"><span data-region="timebar" style="width: 0%;"></span></div>
+                </div>
+                <div class="asw-row" style="gap: 10px; justify-content: center;">
+                    <button type="button" class="asw-btn asw-btn--soft" data-action="finish">{{#str}}finishandmark, mod_aispeakwrite{{/str}}</button>
+                    <button type="button" class="asw-btn asw-btn--line" data-action="restart">{{#str}}startover, mod_aispeakwrite{{/str}}</button>
+                </div>
+                <span class="asw-sub" data-region="result" role="status" aria-live="assertive"></span>
+            </div>
+        </section>
+    </div>
+</div>

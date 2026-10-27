@@ -1,0 +1,88 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_aispeakwrite/manage
+
+    Teacher task list.
+
+    Example context (json):
+    {
+        "cmid": 3, "onmanage": true, "hastasks": true,
+        "tasks": [{"title": "Geburtstagsfeier", "kind": "Writing", "speaking": false, "type": "Email", "topic": "Feste",
+            "audience": "Whole class", "assigned": 0, "due": "30 Oct", "answers": 12, "hidden": false, "editurl": "#",
+            "testurl": "#", "toggleurl": "#", "toggle": "Hide", "deleteurl": "#", "upurl": "", "downurl": "#"}],
+        "addwritingurl": "#", "addspeakingurl": "#", "analyticsurl": "#",
+        "hasbalance": true, "balance": "4,820", "lowcredits": false, "usedmonth": 312, "markings": 212, "partnerturns": 90
+    }
+}}
+<div class="asw">
+    {{> mod_aispeakwrite/teachernav }}
+    <div class="asw-row asw-row--between">
+        <div>
+            <h2 class="asw-h1">{{#str}}tasks, mod_aispeakwrite{{/str}}</h2>
+            <p class="asw-sub">{{#str}}tasks_sub, mod_aispeakwrite{{/str}}</p>
+        </div>
+        <div class="asw-row" style="gap: 10px;">
+            <a class="asw-btn asw-btn--ink" href="{{addwritingurl}}">{{#str}}addwriting, mod_aispeakwrite{{/str}}</a>
+            <a class="asw-btn asw-btn--soft" href="{{addspeakingurl}}">{{#str}}addspeaking, mod_aispeakwrite{{/str}}</a>
+        </div>
+    </div>
+    {{^hastasks}}<div class="asw-banner asw-banner--info">{{#str}}notasksteacher, mod_aispeakwrite{{/str}}</div>{{/hastasks}}
+    {{#hastasks}}
+    <section class="asw-card asw-card--flush">
+        <div class="asw-scroll">
+            <table class="asw-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{{#str}}tasktitle, mod_aispeakwrite{{/str}}</th>
+                        <th scope="col">{{#str}}tasktype, mod_aispeakwrite{{/str}}</th>
+                        <th scope="col">{{#str}}audience, mod_aispeakwrite{{/str}}</th>
+                        <th scope="col">{{#str}}due, mod_aispeakwrite{{/str}}</th>
+                        <th scope="col">{{#str}}answers, mod_aispeakwrite{{/str}}</th>
+                        <th scope="col"><span class="asw-sr">{{#str}}actions{{/str}}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {{#tasks}}
+                    <tr>
+                        <td>
+                            <strong>{{title}}</strong>{{#hidden}} <span class="asw-pill asw-pill--neutral">{{#str}}hiddenfromlearners, mod_aispeakwrite{{/str}}</span>{{/hidden}}
+                            {{#topic}}<br><span class="asw-sub">{{topic}}</span>{{/topic}}
+                        </td>
+                        <td><span class="asw-pill {{#speaking}}asw-pill--warn{{/speaking}}{{^speaking}}asw-pill--blue{{/speaking}}">{{kind}}</span> <span class="asw-sub">{{type}}</span></td>
+                        <td>{{audience}}{{#assigned}}<br><span class="asw-sub">{{#str}}assignedcount, mod_aispeakwrite, {{assigned}}{{/str}}</span>{{/assigned}}</td>
+                        <td class="asw-num">{{due}}</td>
+                        <td class="asw-num">{{answers}}</td>
+                        <td>
+                            <div class="asw-actions">
+                                <a class="asw-btn asw-btn--line" href="{{editurl}}" style="min-height: 36px;">{{#str}}edit{{/str}}</a>
+                                <a class="asw-btn asw-btn--line" href="{{testurl}}" style="min-height: 36px;">{{#str}}test, mod_aispeakwrite{{/str}}</a>
+                                <a class="asw-btn asw-btn--line" href="{{toggleurl}}" style="min-height: 36px;">{{toggle}}</a>
+                                {{#upurl}}<a class="asw-btn asw-btn--line" href="{{upurl}}" style="min-height: 36px;" aria-label="{{#str}}moveup{{/str}}">&#8593;</a>{{/upurl}}
+                                {{#downurl}}<a class="asw-btn asw-btn--line" href="{{downurl}}" style="min-height: 36px;" aria-label="{{#str}}movedown{{/str}}">&#8595;</a>{{/downurl}}
+                                <a class="asw-btn asw-btn--line" href="{{deleteurl}}" style="min-height: 36px; color: var(--asw-bad);">{{#str}}delete{{/str}}</a>
+                            </div>
+                        </td>
+                    </tr>
+                {{/tasks}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {{/hastasks}}
+    {{> mod_aispeakwrite/usage }}
+</div>
