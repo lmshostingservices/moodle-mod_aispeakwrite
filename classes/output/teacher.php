@@ -17,6 +17,7 @@
 namespace mod_aispeakwrite\output;
 
 use mod_aispeakwrite\local\manager;
+use mod_aispeakwrite\local\memory;
 use mod_aispeakwrite\local\operation;
 use mod_aispeakwrite\local\remote;
 
@@ -58,13 +59,16 @@ final class teacher {
         $usage = operation::usage($monthstart, (int)$instance->id);
         $balance = self::balance();
         $low = (int)get_config('mod_aispeakwrite', 'lowcredits');
+        $balancetext = '';
+        if ($balance !== null) {
+            $balancetext = $balance['unlimited'] ? get_string('unlimited', self::P) : format_float($balance['credits'], 0);
+        }
         $out = [
             'usedmonth' => $usage['credits'],
             'markings' => $usage['mark'],
             'partnerturns' => $usage['converse'],
             'hasbalance' => $balance !== null,
-            'balance' => $balance === null ? '' : ($balance['unlimited'] ? get_string('unlimited', self::P)
-                : format_float($balance['credits'], 0)),
+            'balance' => $balancetext,
             'lowcredits' => $balance !== null && !$balance['unlimited'] && $low > 0 && $balance['credits'] < $low,
         ];
         return $out;
@@ -81,23 +85,29 @@ final class teacher {
     public static function home(\stdClass $instance, $cm, \context_module $context): array {
         global $DB;
         $tasks = manager::tasks((int)$instance->id);
-        $learners = (int)$DB->count_records_sql("SELECT COUNT(DISTINCT userid) FROM {aispeakwrite_sub}
-            WHERE aispeakwriteid = ? AND status = 'marked'", [$instance->id]);
-        return array_merge(self::usage($instance), [
-            'cmid' => $cm->id,
-            'onhome' => true,
-            'taskcount' => count($tasks),
-            'writingcount' => count(array_filter($tasks, fn($t) => $t->kind === 'writing')),
-            'speakingcount' => count(array_filter($tasks, fn($t) => $t->kind === 'speaking')),
-            'learners' => $learners,
-            'canmanage' => has_capability('mod/aispeakwrite:managetasks', $context),
-            'canreport' => has_capability('mod/aispeakwrite:viewreports', $context),
-            'manageurl' => (new \moodle_url('/mod/aispeakwrite/manage.php', ['id' => $cm->id]))->out(false),
-            'analyticsurl' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id]))->out(false),
-            'settingsurl' => (new \moodle_url('/course/modedit.php', ['update' => $cm->id]))->out(false),
-            'notasks' => !$tasks,
-            'credentialsmissing' => \mod_aispeakwrite\local\credentials::find() === null,
-        ]);
+        $learners = (int)$DB->count_records_sql(
+            "SELECT COUNT(DISTINCT userid) FROM {aispeakwrite_sub}
+            WHERE aispeakwriteid = ? AND status = 'marked'",
+            [$instance->id]
+        );
+        return array_merge(
+            self::usage($instance),
+            [
+                'cmid' => $cm->id,
+                'onhome' => true,
+                'taskcount' => count($tasks),
+                'writingcount' => count(array_filter($tasks, fn($t) => $t->kind === 'writing')),
+                'speakingcount' => count(array_filter($tasks, fn($t) => $t->kind === 'speaking')),
+                'learners' => $learners,
+                'canmanage' => has_capability('mod/aispeakwrite:managetasks', $context),
+                'canreport' => has_capability('mod/aispeakwrite:viewreports', $context),
+                'manageurl' => (new \moodle_url('/mod/aispeakwrite/manage.php', ['id' => $cm->id]))->out(false),
+                'analyticsurl' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id]))->out(false),
+                'settingsurl' => (new \moodle_url('/course/modedit.php', ['update' => $cm->id]))->out(false),
+                'notasks' => !$tasks,
+                'credentialsmissing' => \mod_aispeakwrite\local\credentials::find() === null,
+            ]
+        );
     }
 
     /**
@@ -110,16 +120,22 @@ final class teacher {
     public static function manage(\stdClass $instance, $cm): array {
         global $DB;
         $tasks = array_values(manager::tasks((int)$instance->id));
-        $counts = $DB->get_records_sql_menu("SELECT taskid, COUNT(1) FROM {aispeakwrite_sub}
-            WHERE aispeakwriteid = ? AND status = 'marked' GROUP BY taskid", [$instance->id]);
-        $assigned = $DB->get_records_sql_menu("SELECT tu.taskid, COUNT(1) FROM {aispeakwrite_taskuser} tu
-            JOIN {aispeakwrite_task} t ON t.id = tu.taskid WHERE t.aispeakwriteid = ? GROUP BY tu.taskid", [$instance->id]);
+        $counts = $DB->get_records_sql_menu(
+            "SELECT taskid, COUNT(1) FROM {aispeakwrite_sub}
+            WHERE aispeakwriteid = ? AND status = 'marked' GROUP BY taskid",
+            [$instance->id]
+        );
+        $assigned = $DB->get_records_sql_menu(
+            "SELECT tu.taskid, COUNT(1) FROM {aispeakwrite_taskuser} tu
+            JOIN {aispeakwrite_task} t ON t.id = tu.taskid WHERE t.aispeakwriteid = ? GROUP BY tu.taskid",
+            [$instance->id]
+        );
         $rows = [];
         $last = count($tasks) - 1;
         foreach ($tasks as $i => $task) {
             $taskparams = ['id' => $cm->id, 'task' => $task->id];
-            $u = fn($action) => (new \moodle_url('/mod/aispeakwrite/manage.php', ['id' => $cm->id, 'task' => $task->id,
-                'action' => $action, 'sesskey' => sesskey()]))->out(false);
+            $actionparams = $taskparams + ['sesskey' => sesskey()];
+            $u = fn($action) => self::url('manage.php', $actionparams + ['action' => $action]);
             $audience = get_string('audience_' . $task->audience, self::P);
             if ($task->audience === 'group' && $task->groupid) {
                 $audience .= ': ' . format_string(groups_get_group_name((int)$task->groupid));
@@ -144,17 +160,18 @@ final class teacher {
                 'downurl' => $i < $last ? $u('down') : '',
             ];
         }
-        return array_merge(self::usage($instance), [
-            'cmid' => $cm->id,
-            'onmanage' => true,
-            'tasks' => $rows,
-            'hastasks' => !empty($rows),
-            'addwritingurl' => (new \moodle_url('/mod/aispeakwrite/edittask.php', ['id' => $cm->id,
-                'kind' => 'writing']))->out(false),
-            'addspeakingurl' => (new \moodle_url('/mod/aispeakwrite/edittask.php', ['id' => $cm->id,
-                'kind' => 'speaking']))->out(false),
-            'analyticsurl' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id]))->out(false),
-        ]);
+        return array_merge(
+            self::usage($instance),
+            [
+                'cmid' => $cm->id,
+                'onmanage' => true,
+                'tasks' => $rows,
+                'hastasks' => !empty($rows),
+                'addwritingurl' => self::url('edittask.php', ['id' => $cm->id, 'kind' => 'writing']),
+                'addspeakingurl' => self::url('edittask.php', ['id' => $cm->id, 'kind' => 'speaking']),
+                'analyticsurl' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id]))->out(false),
+            ]
+        );
     }
 
     /**
@@ -194,8 +211,12 @@ final class teacher {
             $params['aid'] = $aid;
             $memory = $DB->get_records_select('aispeakwrite_memory', "aispeakwriteid = :aid AND userid $in", $params);
             $params['since'] = time() - 30 * DAYSECS;
-            $subs = $DB->get_records_select('aispeakwrite_sub', "aispeakwriteid = :aid AND userid $in
-                AND status = 'marked' AND timemarked >= :since", $params);
+            $subs = $DB->get_records_select(
+                'aispeakwrite_sub',
+                "aispeakwriteid = :aid AND userid $in
+                AND status = 'marked' AND timemarked >= :since",
+                $params
+            );
         }
 
         // Figures for the last 30 days.
@@ -238,26 +259,29 @@ final class teacher {
                 : '–', 'note' => get_string('kpi_rewrites_note', self::P)],
         ];
 
-        // Most common mistakes: share of recent results that were misses, per pattern.
+        // Most common mistakes: how many learners got each tip or pattern wrong in their recent results.
         $bykey = [];
         foreach ($memory as $m) {
             $k = $m->patternkey;
-            $bykey[$k] = $bykey[$k] ?? ['label' => $m->label, 'type' => $m->ptype, 'miss' => 0, 'total' => 0, 'users' => []];
+            $bykey[$k] = $bykey[$k] ?? ['label' => memory::display_label($m->patternkey, $m->label), 'type' => $m->ptype,
+                'miss' => 0, 'total' => 0, 'users' => []];
             $miss = substr_count($m->recent, '0');
             $bykey[$k]['miss'] += $miss;
             $bykey[$k]['total'] += strlen($m->recent);
-            if ($miss >= 2) {
+            if ($miss >= 1) {
                 $bykey[$k]['users'][(int)$m->userid] = $m->recent;
             }
         }
         $issues = [];
         foreach ($bykey as $key => $b) {
-            if ($b['total'] < 3 || !$b['miss']) {
+            if (!$b['users']) {
                 continue;
             }
-            $issues[$key] = $b + ['pct' => (int)round($b['miss'] / $b['total'] * 100), 'key' => $key];
+            $affected = count($b['users']);
+            $issues[$key] = $b + ['affected' => $affected, 'key' => $key,
+                'pct' => count($users) ? (int)round($affected / count($users) * 100) : 0];
         }
-        uasort($issues, fn($a, $b) => $b['pct'] <=> $a['pct']);
+        uasort($issues, fn($a, $b) => [$b['affected'], $b['miss']] <=> [$a['affected'], $a['miss']]);
         $issues = array_slice($issues, 0, 8, true);
         if ($selected === '' || !isset($issues[$selected])) {
             $selected = $issues ? array_key_first($issues) : '';
@@ -266,9 +290,9 @@ final class teacher {
         foreach ($issues as $key => $i) {
             $data['issues'][] = [
                 'label' => (string)($i['label']), 'type' => get_string('ptype_' . $i['type'], self::P), 'pct' => $i['pct'],
+                'affected' => $i['affected'], 'learners' => count($users),
                 'selected' => $key === $selected,
-                'url' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id, 'group' => $groupid,
-                    'issue' => $key]))->out(false),
+                'url' => self::url('analytics.php', ['id' => $cm->id, 'group' => $groupid, 'issue' => $key]),
             ];
         }
         $data['hasissues'] = !empty($issues);
@@ -280,9 +304,13 @@ final class teacher {
                     continue;
                 }
                 $people[] = ['name' => fullname($users[$uid]), 'recentpct' => views::recent_percent($recent), 'userid' => $uid,
-                    'line' => get_string('rightofrecent', self::P, ['ok' => substr_count($recent, '1'),
-                    'total' => strlen($recent)])];
+                    'line' => get_string(
+                        'rightofrecent',
+                        self::P,
+                        ['ok' => substr_count($recent, '1'), 'total' => strlen($recent)]
+                    )];
             }
+            usort($people, fn($a, $b) => $a['recentpct'] <=> $b['recentpct']);
             $tasks = [];
             foreach (manager::tasks($aid, true) as $t) {
                 $tasks[] = ['id' => $t->id, 'name' => format_string($t->title) . ' (' .
@@ -330,5 +358,16 @@ final class teacher {
         $data['grid'] = $grid;
         $data['hasgrid'] = $grid && $tipkeys;
         return array_merge(self::usage($instance), $data);
+    }
+
+    /**
+     * A link to one of this plugin's pages.
+     *
+     * @param string $page file name, e.g. "manage.php"
+     * @param array $params
+     * @return string
+     */
+    protected static function url(string $page, array $params): string {
+        return (new \moodle_url('/mod/aispeakwrite/' . $page, $params))->out(false);
     }
 }

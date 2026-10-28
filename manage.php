@@ -72,8 +72,10 @@ if ($action !== '' && $taskid) {
         case 'delete':
             if (!$confirm) {
                 echo $OUTPUT->header();
-                $yes = new moodle_url($url, ['task' => $task->id, 'action' => 'delete', 'confirm' => 1,
-                    'sesskey' => sesskey()]);
+                $yes = new moodle_url(
+                    $url,
+                    ['task' => $task->id, 'action' => 'delete', 'confirm' => 1, 'sesskey' => sesskey()]
+                );
                 echo $OUTPUT->confirm(
                     get_string('deletetaskconfirm', 'mod_aispeakwrite', format_string($task->title)),
                     $yes,

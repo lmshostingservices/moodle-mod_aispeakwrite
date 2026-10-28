@@ -37,8 +37,10 @@ final class backup_test extends \advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
         $course = $this->getDataGenerator()->create_course();
-        $module = $this->getDataGenerator()->create_module('aispeakwrite', ['course' => $course->id,
-            'activitytips' => 'Satzanfang: x', 'correctionmode' => 'explain']);
+        $module = $this->getDataGenerator()->create_module(
+            'aispeakwrite',
+            ['course' => $course->id, 'activitytips' => 'Satzanfang: x', 'correctionmode' => 'explain']
+        );
         $gen = $this->getDataGenerator()->get_plugin_generator('mod_aispeakwrite');
         $gen->create_task(['aispeakwriteid' => $module->id, 'title' => 'One']);
         $gen->create_task(['aispeakwriteid' => $module->id, 'title' => 'Two', 'kind' => 'speaking']);
@@ -63,7 +65,13 @@ final class backup_test extends \advanced_testcase {
             [$copy->id]
         );
         $this->assertSame(['One', 'Two'], $titles);
-        $this->assertSame('speak3', $DB->get_field('aispeakwrite_task', 'tasktype', ['aispeakwriteid' => $copy->id,
-            'title' => 'Two']));
+        $this->assertSame(
+            'speak3',
+            $DB->get_field(
+                'aispeakwrite_task',
+                'tasktype',
+                ['aispeakwriteid' => $copy->id, 'title' => 'Two']
+            )
+        );
     }
 }

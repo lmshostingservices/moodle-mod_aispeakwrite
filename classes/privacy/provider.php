@@ -45,43 +45,67 @@ class provider implements
      * @return collection
      */
     public static function get_metadata(collection $collection): collection {
-        $collection->add_database_table('aispeakwrite_sub', [
-            'userid' => 'privacy:metadata:aispeakwrite_sub:userid',
-            'content' => 'privacy:metadata:aispeakwrite_sub:content',
-            'notes' => 'privacy:metadata:aispeakwrite_sub:notes',
-            'metrics' => 'privacy:metadata:aispeakwrite_sub:metrics',
-            'feedback' => 'privacy:metadata:aispeakwrite_sub:feedback',
-            'score' => 'privacy:metadata:aispeakwrite_sub:score',
-            'timecreated' => 'privacy:metadata:aispeakwrite_sub:timecreated',
-        ], 'privacy:metadata:aispeakwrite_sub');
-        $collection->add_database_table('aispeakwrite_memory', [
-            'userid' => 'privacy:metadata:aispeakwrite_memory:userid',
-            'patternkey' => 'privacy:metadata:aispeakwrite_memory:patternkey',
-            'label' => 'privacy:metadata:aispeakwrite_memory:label',
-            'hits' => 'privacy:metadata:aispeakwrite_memory:hits',
-            'misses' => 'privacy:metadata:aispeakwrite_memory:misses',
-            'recent' => 'privacy:metadata:aispeakwrite_memory:recent',
-        ], 'privacy:metadata:aispeakwrite_memory');
-        $collection->add_database_table('aispeakwrite_op', [
-            'userid' => 'privacy:metadata:aispeakwrite_op:userid',
-            'kind' => 'privacy:metadata:aispeakwrite_op:kind',
-            'body' => 'privacy:metadata:aispeakwrite_op:body',
-            'credits' => 'privacy:metadata:aispeakwrite_op:credits',
-            'timecreated' => 'privacy:metadata:aispeakwrite_op:timecreated',
-        ], 'privacy:metadata:aispeakwrite_op');
-        $collection->add_database_table('aispeakwrite_taskuser', [
-            'userid' => 'privacy:metadata:aispeakwrite_taskuser:userid',
-            'duedate' => 'privacy:metadata:aispeakwrite_taskuser:duedate',
-        ], 'privacy:metadata:aispeakwrite_taskuser');
-        $collection->add_external_location_link('lmslabs', [
-            'answer' => 'privacy:metadata:lmslabs:answer',
-            'speech' => 'privacy:metadata:lmslabs:speech',
-            'history' => 'privacy:metadata:lmslabs:history',
-            'language' => 'privacy:metadata:lmslabs:language',
-        ], 'privacy:metadata:lmslabs');
-        $collection->add_external_location_link('browser', [
-            'audio' => 'privacy:metadata:browser:audio',
-        ], 'privacy:metadata:browser');
+        $collection->add_database_table(
+            'aispeakwrite_sub',
+            [
+                'userid' => 'privacy:metadata:aispeakwrite_sub:userid',
+                'content' => 'privacy:metadata:aispeakwrite_sub:content',
+                'notes' => 'privacy:metadata:aispeakwrite_sub:notes',
+                'metrics' => 'privacy:metadata:aispeakwrite_sub:metrics',
+                'feedback' => 'privacy:metadata:aispeakwrite_sub:feedback',
+                'score' => 'privacy:metadata:aispeakwrite_sub:score',
+                'timecreated' => 'privacy:metadata:aispeakwrite_sub:timecreated',
+            ],
+            'privacy:metadata:aispeakwrite_sub'
+        );
+        $collection->add_database_table(
+            'aispeakwrite_memory',
+            [
+                'userid' => 'privacy:metadata:aispeakwrite_memory:userid',
+                'patternkey' => 'privacy:metadata:aispeakwrite_memory:patternkey',
+                'label' => 'privacy:metadata:aispeakwrite_memory:label',
+                'hits' => 'privacy:metadata:aispeakwrite_memory:hits',
+                'misses' => 'privacy:metadata:aispeakwrite_memory:misses',
+                'recent' => 'privacy:metadata:aispeakwrite_memory:recent',
+            ],
+            'privacy:metadata:aispeakwrite_memory'
+        );
+        $collection->add_database_table(
+            'aispeakwrite_op',
+            [
+                'userid' => 'privacy:metadata:aispeakwrite_op:userid',
+                'kind' => 'privacy:metadata:aispeakwrite_op:kind',
+                'body' => 'privacy:metadata:aispeakwrite_op:body',
+                'credits' => 'privacy:metadata:aispeakwrite_op:credits',
+                'timecreated' => 'privacy:metadata:aispeakwrite_op:timecreated',
+            ],
+            'privacy:metadata:aispeakwrite_op'
+        );
+        $collection->add_database_table(
+            'aispeakwrite_taskuser',
+            [
+                'userid' => 'privacy:metadata:aispeakwrite_taskuser:userid',
+                'duedate' => 'privacy:metadata:aispeakwrite_taskuser:duedate',
+            ],
+            'privacy:metadata:aispeakwrite_taskuser'
+        );
+        $collection->add_external_location_link(
+            'lmslabs',
+            [
+                'answer' => 'privacy:metadata:lmslabs:answer',
+                'speech' => 'privacy:metadata:lmslabs:speech',
+                'history' => 'privacy:metadata:lmslabs:history',
+                'language' => 'privacy:metadata:lmslabs:language',
+            ],
+            'privacy:metadata:lmslabs'
+        );
+        $collection->add_external_location_link(
+            'browser',
+            [
+                'audio' => 'privacy:metadata:browser:audio',
+            ],
+            'privacy:metadata:browser'
+        );
         return $collection;
     }
 
@@ -104,9 +128,12 @@ class provider implements
                 ['level' => CONTEXT_MODULE, 'userid' => $userid]
             );
         }
-        $contextlist->add_from_sql("$base JOIN {aispeakwrite_task} tk ON tk.aispeakwriteid = a.id
+        $contextlist->add_from_sql(
+            "$base JOIN {aispeakwrite_task} tk ON tk.aispeakwriteid = a.id
                                          JOIN {aispeakwrite_taskuser} tu ON tu.taskid = tk.id
-                                        WHERE tu.userid = :userid", ['level' => CONTEXT_MODULE, 'userid' => $userid]);
+                                        WHERE tu.userid = :userid",
+            ['level' => CONTEXT_MODULE, 'userid' => $userid]
+        );
         return $contextlist;
     }
 
@@ -132,9 +159,13 @@ class provider implements
                 $params
             );
         }
-        $userlist->add_from_sql('userid', "$base JOIN {aispeakwrite_task} tk ON tk.aispeakwriteid = a.id
+        $userlist->add_from_sql(
+            'userid',
+            "$base JOIN {aispeakwrite_task} tk ON tk.aispeakwriteid = a.id
                                                  JOIN {aispeakwrite_taskuser} t ON t.taskid = tk.id
-                                                WHERE cm.id = :cmid", $params);
+                                                WHERE cm.id = :cmid",
+            $params
+        );
     }
 
     /**
@@ -193,9 +224,12 @@ class provider implements
             if (!$answers && !$memory && !$requests && !$assigned) {
                 continue;
             }
-            writer::with_context($context)->export_data([get_string('pluginname', 'mod_aispeakwrite')], (object)[
-                'answers' => $answers, 'focusareas' => $memory, 'requests' => $requests, 'assigned' => $assigned,
-            ]);
+            writer::with_context($context)->export_data(
+                [get_string('pluginname', 'mod_aispeakwrite')],
+                (object)[
+                    'answers' => $answers, 'focusareas' => $memory, 'requests' => $requests, 'assigned' => $assigned,
+                ]
+            );
         }
     }
 

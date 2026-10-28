@@ -48,17 +48,35 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
             ['aispeakwriteid' => $module->id]
         );
         foreach ([$u1, $u2] as $u) {
-            $DB->insert_record('aispeakwrite_sub', (object)['aispeakwriteid' => $module->id, 'taskid' => $task->id,
+            $DB->insert_record(
+                'aispeakwrite_sub',
+                (object)['aispeakwriteid' => $module->id, 'taskid' => $task->id,
                 'userid' => $u->id, 'attempt' => 1, 'kind' => 'writing', 'status' => 'marked', 'content' => 'Hallo Tim',
                 'notes' => '', 'fbmode' => 'think', 'contenthash' => '', 'tipsversion' => '', 'score' => 9, 'maxscore' => 45,
-                'timecreated' => time(), 'timemodified' => time(), 'timemarked' => time()]);
-            $DB->insert_record('aispeakwrite_memory', (object)['aispeakwriteid' => $module->id, 'userid' => $u->id,
-                'patternkey' => 'tip:a', 'label' => 'A', 'ptype' => 'tip', 'recent' => '01', 'timemodified' => time()]);
-            $DB->insert_record('aispeakwrite_op', (object)['aispeakwriteid' => $module->id, 'userid' => $u->id,
+                'timecreated' => time(),
+                'timemodified' => time(),
+                'timemarked' => time()]
+            );
+            $DB->insert_record(
+                'aispeakwrite_memory',
+                (object)['aispeakwriteid' => $module->id, 'userid' => $u->id,
+                'patternkey' => 'tip:a',
+                'label' => 'A',
+                'ptype' => 'tip',
+                'recent' => '01',
+                'timemodified' => time()]
+            );
+            $DB->insert_record(
+                'aispeakwrite_op',
+                (object)['aispeakwriteid' => $module->id, 'userid' => $u->id,
                 'kind' => 'mark', 'bodyhash' => 'x', 'idemkey' => 'k' . $u->id, 'state' => 'complete', 'credits' => 1,
-                'timecreated' => time(), 'timemodified' => time()]);
-            $DB->insert_record('aispeakwrite_taskuser', (object)['taskid' => $task->id, 'userid' => $u->id,
-                'timecreated' => time()]);
+                'timecreated' => time(),
+                'timemodified' => time()]
+            );
+            $DB->insert_record(
+                'aispeakwrite_taskuser',
+                (object)['taskid' => $task->id, 'userid' => $u->id, 'timecreated' => time()]
+            );
         }
         return [\context_module::instance($module->cmid), $u1, $u2, $module];
     }

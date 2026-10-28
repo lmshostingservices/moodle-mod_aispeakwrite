@@ -36,14 +36,15 @@ class submit extends base {
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'Course module id'),
-            'subid' => new external_value(PARAM_INT, 'Draft id'),
-            // Raw so that a learner typing "<" is not rejected; the text is stored as plain text (tags stripped) and is
-            // only ever output escaped.
-            'content' => new external_value(PARAM_RAW, 'Text as typed, stored as plain text'), // pipeline-ignore: PARAM_RAW — preserve typed comparison symbols; submissions::save strips tags and control characters.
-            'notes' => new external_value(PARAM_TEXT, 'Draft note, stored as plain text', VALUE_DEFAULT, ''),
-        ]);
+        return new external_function_parameters(
+            [
+                'cmid' => new external_value(PARAM_INT, 'Course module id'),
+                'subid' => new external_value(PARAM_INT, 'Draft id'),
+                // Plain text. The browser adds a space after any "<" that could start a tag, so nothing typed is lost.
+                'content' => new external_value(PARAM_TEXT, 'Text as typed'),
+                'notes' => new external_value(PARAM_TEXT, 'Draft note', VALUE_DEFAULT, ''),
+            ]
+        );
     }
 
     /**
@@ -83,11 +84,13 @@ class submit extends base {
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {
-        return new external_single_structure([
-            'ok' => new external_value(PARAM_BOOL, 'Marked'),
-            'pending' => new external_value(PARAM_BOOL, 'No definite answer yet: try again with the same request'),
-            'message' => new external_value(PARAM_TEXT, 'Message for the learner'),
-            'url' => new external_value(PARAM_URL, 'Feedback page'),
-        ]);
+        return new external_single_structure(
+            [
+                'ok' => new external_value(PARAM_BOOL, 'Marked'),
+                'pending' => new external_value(PARAM_BOOL, 'No definite answer yet: try again with the same request'),
+                'message' => new external_value(PARAM_TEXT, 'Message for the learner'),
+                'url' => new external_value(PARAM_URL, 'Feedback page'),
+            ]
+        );
     }
 }

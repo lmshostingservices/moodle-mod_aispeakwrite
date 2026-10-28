@@ -17,7 +17,7 @@
 namespace mod_aispeakwrite\local;
 
 /**
- * The school's own tips and tricks, and the fixed list of grammar patterns.
+ * The school's own tips and tricks, and the grammar patterns for each language being learned.
  *
  * Tips are entered one per line as "Name: tip | example" at three levels (school, activity, task). They are merged, the
  * most specific level winning when two tips share a name. Each tip gets a stable id ("tip:satzanfang") that the AI
@@ -34,13 +34,45 @@ final class tips {
     /** @var int Maximum number of tips sent with a request. */
     public const MAXTIPS = 80;
 
-    /** @var string[] Grammar and form patterns the AI may cite (lang string pattern_<name>). */
-    public const PATTERNS = [
-        'verbsecond', 'verbfinal', 'conjugation', 'tense', 'separableverb', 'modalverb', 'article', 'casedative',
-        'caseaccusative', 'preposition', 'adjectiveending', 'plural', 'pronoun', 'reflexive', 'wordchoice',
-        'spelling', 'capitals', 'punctuation', 'register', 'wordorder',
+    /** @var string[] Grammar and form patterns for every language (lang string pattern_<name>). */
+    public const COMMON_PATTERNS = [
+        'conjugation', 'tense', 'article', 'agreement', 'preposition', 'plural', 'pronoun', 'wordorder', 'wordchoice',
+        'spelling', 'punctuation', 'register',
     ];
 
+    /** @var string[][] Extra patterns for each language being learned. */
+    public const LANGUAGE_PATTERNS = [
+        'de' => ['verbsecond', 'verbfinal', 'separableverb', 'modalverb', 'casedative', 'caseaccusative', 'adjectiveending',
+            'reflexive', 'capitals'],
+        'en' => ['irregularverb', 'phrasalverb', 'questions', 'capitals'],
+        'fr' => ['accents', 'pastparticiple', 'subjunctive', 'partitive', 'negation', 'reflexive'],
+        'es' => ['serestar', 'porpara', 'pasttense', 'subjunctive', 'accents', 'reflexive'],
+        'it' => ['auxiliary', 'articulatedprep', 'pasttense', 'subjunctive', 'accents', 'reflexive'],
+        'nl' => ['dehet', 'verbsecond', 'verbfinal', 'separableverb', 'modalverb', 'reflexive'],
+        'pt' => ['serestar', 'contraction', 'pronounplacement', 'pasttense', 'subjunctive', 'accents'],
+    ];
+
+    /**
+     * The pattern names the AI may cite for a language being learned.
+     *
+     * @param string|null $targetlang
+     * @return string[]
+     */
+    public static function pattern_names(?string $targetlang): array {
+        return array_values(array_unique(array_merge(
+            self::COMMON_PATTERNS,
+            self::LANGUAGE_PATTERNS[manager::language_family($targetlang)] ?? []
+        )));
+    }
+
+    /**
+     * Every pattern name in any language, so feedback marked earlier always has a readable label.
+     *
+     * @return string[]
+     */
+    public static function all_pattern_names(): array {
+        return array_values(array_unique(array_merge(self::COMMON_PATTERNS, ...array_values(self::LANGUAGE_PATTERNS))));
+    }
     /**
      * Parses one tips box.
      *
@@ -92,6 +124,8 @@ final class tips {
     public static function slug(string $name): string {
         $slug = \core_text::strtolower($name);
         $slug = strtr($slug, ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
+        // Other accents (é, ñ, ç, ã …) keep their base letter, so French or Spanish tip names make readable ids too.
+        $slug = \core_text::specialtoascii($slug);
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
         $slug = trim($slug, '-');
         return $slug === '' ? substr(sha1($name), 0, 8) : substr($slug, 0, 40);
@@ -123,13 +157,14 @@ final class tips {
     }
 
     /**
-     * The fixed grammar patterns as sent to LMS Labs.
+     * The grammar patterns for a language, as sent to LMS Labs.
      *
+     * @param string|null $targetlang
      * @return array[] each ['id', 'name']
      */
-    public static function patterns(): array {
+    public static function patterns(?string $targetlang): array {
         $out = [];
-        foreach (self::PATTERNS as $p) {
+        foreach (self::pattern_names($targetlang) as $p) {
             $out[] = ['id' => 'grammar:' . $p, 'name' => get_string('pattern_' . $p, 'mod_aispeakwrite')];
         }
         return $out;
@@ -150,7 +185,7 @@ final class tips {
         }
         if (str_starts_with($id, 'grammar:')) {
             $p = substr($id, 8);
-            if (in_array($p, self::PATTERNS, true)) {
+            if (in_array($p, self::all_pattern_names(), true)) {
                 return get_string('pattern_' . $p, 'mod_aispeakwrite');
             }
         }

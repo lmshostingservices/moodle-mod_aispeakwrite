@@ -66,8 +66,11 @@ final class charging_test extends \advanced_testcase {
         set_config('lmslabsapikey', 'key-secret', 'mod_aispeakwrite');
         set_config('schooltips', 'Satzanfang: Nicht mit ich beginnen. | Am Samstag komme ich.', 'mod_aispeakwrite');
         $course = $this->getDataGenerator()->create_course();
-        $user = $this->getDataGenerator()->create_and_enrol($course, 'student', ['firstname' => 'Justus',
-            'email' => 'justus@example.com']);
+        $user = $this->getDataGenerator()->create_and_enrol(
+            $course,
+            'student',
+            ['firstname' => 'Justus', 'email' => 'justus@example.com']
+        );
         $module = $this->getDataGenerator()->create_module('aispeakwrite', ['course' => $course->id] + $settings);
         $instance = $DB->get_record('aispeakwrite', ['id' => $module->id]);
         $task = $this->getDataGenerator()->get_plugin_generator('mod_aispeakwrite')->create_task(
@@ -92,15 +95,17 @@ final class charging_test extends \advanced_testcase {
      * @return array
      */
     private function delivered(int $credits = 1): array {
-        return [200, json_encode(['requestId' => 'r1', 'creditsCharged' => $credits, 'result' => [
-            'summary' => 'Good.',
-            'criteria' => ['task' => ['atg' => 9, 'telc' => 9], 'communication' => ['atg' => 9, 'telc' => 15],
-                'form' => ['atg' => 3, 'telc' => 9]],
-            'points' => [['id' => 'p3', 'status' => 'covered']],
-            'marks' => [['type' => 'error', 'text' => 'den Einladung', 'correction' => 'die Einladung',
-                'ruleId' => 'grammar:article']],
-            'ruleHits' => [['ruleId' => 'tip:satzanfang', 'ok' => false]],
-        ]])];
+        return [200, json_encode(
+            ['requestId' => 'r1', 'creditsCharged' => $credits, 'result' => [
+                'summary' => 'Good.',
+                'criteria' => ['task' => ['atg' => 9, 'telc' => 9], 'communication' => ['atg' => 9, 'telc' => 15],
+                    'form' => ['atg' => 3, 'telc' => 9]],
+                'points' => [['id' => 'p3', 'status' => 'covered']],
+                'marks' => [['type' => 'error', 'text' => 'den Einladung', 'correction' => 'die Einladung',
+                    'ruleId' => 'grammar:article']],
+                'ruleHits' => [['ruleId' => 'tip:satzanfang', 'ok' => false]],
+            ]]
+        )];
     }
 
     /**

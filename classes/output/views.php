@@ -155,8 +155,16 @@ final class views {
             }
         }
         if (empty($data['continue'])) {
-            $draft = $DB->get_records_select('aispeakwrite_sub', "aispeakwriteid = :aid AND userid = :userid
-                AND status = 'draft' AND kind = 'writing'", ['aid' => $aid, 'userid' => $userid], 'timemodified DESC', '*', 0, 1);
+            $draft = $DB->get_records_select(
+                'aispeakwrite_sub',
+                "aispeakwriteid = :aid AND userid = :userid
+                AND status = 'draft' AND kind = 'writing'",
+                ['aid' => $aid, 'userid' => $userid],
+                'timemodified DESC',
+                '*',
+                0,
+                1
+            );
             $draft = $draft ? reset($draft) : null;
             if ($draft && isset($tasks[$draft->taskid]) && trim((string)$draft->content) !== '') {
                 $task = $tasks[$draft->taskid];
@@ -184,13 +192,13 @@ final class views {
             }
         }
         if ($next) {
+            $meta = get_string('tasktype_' . $next->tasktype, self::P);
+            if ($next->due) {
+                $meta .= ' · ' . get_string('duedate', self::P, userdate($next->due, get_string('strftimedaydate', 'langconfig')));
+            }
             $data['next'] = [
                 'title' => format_string($next->title),
-                'meta' => get_string('tasktype_' . $next->tasktype, self::P) .
-                    ($next->due ? ' · ' . get_string('duedate', self::P, userdate($next->due, get_string(
-                        'strftimedaydate',
-                        'langconfig'
-                    ))) : ''),
+                'meta' => $meta,
                 'speaking' => $next->kind === 'speaking',
                 'url' => self::task_url($cm, $next),
                 'button' => get_string($next->kind === 'speaking' ? 'startspeaking' : 'startwriting', self::P),
@@ -233,13 +241,16 @@ final class views {
                     continue;
                 }
                 $pct = (int)round(array_sum($sums[$kind][$key]) / count($sums[$kind][$key]) / 15 * 100);
-                $rows[] = self::skill(get_string('criterion_' . $kind . '_' . $key, self::P), $pct);
+                $rows[] = self::skill(manager::criterion_label($kind, $key, $instance->targetlang), $pct);
             }
             if ($kind === 'speaking' && $understood[1]) {
-                array_unshift($rows, self::skill(
-                    get_string('understood', self::P),
-                    (int)round($understood[0] / $understood[1] * 100)
-                ));
+                array_unshift(
+                    $rows,
+                    self::skill(
+                        get_string('understood', self::P),
+                        (int)round($understood[0] / $understood[1] * 100)
+                    )
+                );
             }
             if ($rows) {
                 $skills[] = ['label' => get_string('kind_' . $kind, self::P), 'rows' => $rows];
@@ -383,16 +394,19 @@ final class views {
                 $types[$type]['done']++;
                 $types[$type]['sum'][] = $pct;
             }
-            $cards[] = array_merge([
-                'title' => format_string($task->title),
-                'topic' => (string)($task->topic !== '' ? $task->topic : get_string('tasktype_' . $type, self::P)),
-                'sub' => get_string('tasktype_' . $type, self::P),
-                'best' => $pct === null ? '' : get_string('bestpct', self::P, (int)round($pct)),
-                'due' => $task->due ? userdate($task->due, get_string('strftimedateshort', 'langconfig')) : '',
-                'assigned' => !empty($task->assigned) && $task->due,
-                'band' => 'band' . ($i++ % 6),
-                'url' => self::task_url($cm, $task),
-            ], self::status($pct));
+            $cards[] = array_merge(
+                [
+                    'title' => format_string($task->title),
+                    'topic' => (string)($task->topic !== '' ? $task->topic : get_string('tasktype_' . $type, self::P)),
+                    'sub' => get_string('tasktype_' . $type, self::P),
+                    'best' => $pct === null ? '' : get_string('bestpct', self::P, (int)round($pct)),
+                    'due' => $task->due ? userdate($task->due, get_string('strftimedateshort', 'langconfig')) : '',
+                    'assigned' => !empty($task->assigned) && $task->due,
+                    'band' => 'band' . ($i++ % 6),
+                    'url' => self::task_url($cm, $task),
+                ],
+                self::status($pct)
+            );
         }
         $typecards = [];
         foreach ($types as $type) {
@@ -476,38 +490,41 @@ final class views {
         $plan = max(1, (int)round($minutes * 0.17));
         $check = max(1, (int)round($minutes * 0.17));
         $write = max(1, $minutes - $read - $plan - $check);
-        return array_merge(self::task_panel($task), [
-            'cmid' => $cm->id,
-            'subid' => $sub->id,
-            'content' => (string)$sub->content,
-            'notes' => (string)$sub->notes,
-            'words' => manager::words((string)$sub->content),
-            'pending' => $sub->status === 'pending',
-            'draftn' => get_string('draftn', self::P, $sub->attempt),
-            'modelabel' => get_string('fbmode_' . $sub->fbmode, self::P),
-            'modeexplain' => get_string('fbmode_' . $sub->fbmode . '_desc', self::P),
-            'checks' => $checks,
-            'haschecks' => !empty($checks),
-            'groups' => $groups,
-            'hasgroups' => !empty($groups),
-            'keys' => array_map(fn($k) => ['key' => $k], self::keys($instance->targetlang)),
-            'haskeys' => !empty(self::keys($instance->targetlang)),
-            'markingsleft' => $left === null ? '' : get_string(
-                'markingsleft',
-                self::P,
-                ['left' => $left, 'total' => $instance->dailylimit]
-            ),
-            'nomarkings' => $left !== null && $left <= 0 && $sub->status !== 'pending',
-            'minutes' => $minutes,
-            'phases' => [
-                ['label' => get_string('phase_read', self::P), 'min' => $read, 'phase' => 'read'],
-                ['label' => get_string('phase_plan', self::P), 'min' => $plan, 'phase' => 'plan'],
-                ['label' => get_string('phase_write', self::P), 'min' => $write, 'phase' => 'write'],
-                ['label' => get_string('phase_check', self::P), 'min' => $check, 'phase' => 'check'],
-            ],
-            'backurl' => (new \moodle_url('/mod/aispeakwrite/practice.php', ['id' => $cm->id]))->out(false),
-            'lang' => $instance->targetlang,
-        ]);
+        return array_merge(
+            self::task_panel($task),
+            [
+                'cmid' => $cm->id,
+                'subid' => $sub->id,
+                'content' => (string)$sub->content,
+                'notes' => (string)$sub->notes,
+                'words' => manager::words((string)$sub->content),
+                'pending' => $sub->status === 'pending',
+                'draftn' => get_string('draftn', self::P, $sub->attempt),
+                'modelabel' => get_string('fbmode_' . $sub->fbmode, self::P),
+                'modeexplain' => get_string('fbmode_' . $sub->fbmode . '_desc', self::P),
+                'checks' => $checks,
+                'haschecks' => !empty($checks),
+                'groups' => $groups,
+                'hasgroups' => !empty($groups),
+                'keys' => array_map(fn($k) => ['key' => $k], self::keys($instance->targetlang)),
+                'haskeys' => !empty(self::keys($instance->targetlang)),
+                'markingsleft' => $left === null ? '' : get_string(
+                    'markingsleft',
+                    self::P,
+                    ['left' => $left, 'total' => $instance->dailylimit]
+                ),
+                'nomarkings' => $left !== null && $left <= 0 && $sub->status !== 'pending',
+                'minutes' => $minutes,
+                'phases' => [
+                    ['label' => get_string('phase_read', self::P), 'min' => $read, 'phase' => 'read'],
+                    ['label' => get_string('phase_plan', self::P), 'min' => $plan, 'phase' => 'plan'],
+                    ['label' => get_string('phase_write', self::P), 'min' => $write, 'phase' => 'write'],
+                    ['label' => get_string('phase_check', self::P), 'min' => $check, 'phase' => 'check'],
+                ],
+                'backurl' => (new \moodle_url('/mod/aispeakwrite/practice.php', ['id' => $cm->id]))->out(false),
+                'lang' => $instance->targetlang,
+            ]
+        );
     }
 
     /**
@@ -542,32 +559,37 @@ final class views {
         $merged = tips::merged($instance, $task);
         $left = manager::markings_left($instance, (int)$sub->userid);
         $conversation = $task->tasktype !== 'speak1' || trim((string)$task->partnerbrief) !== '';
-        return array_merge(self::task_panel($task), [
-            'cmid' => $cm->id,
-            'subid' => $sub->id,
-            'lang' => $instance->targetlang,
-            'pending' => $sub->status === 'pending',
-            'tipline' => (string)(implode(' · ', array_slice(array_column($merged['tips'], 'name'), 0, 4))),
-            'hastips' => !empty($merged['tips']),
-            'conversation' => $conversation,
-            'markingsleft' => $left === null ? '' : get_string(
-                'markingsleft',
-                self::P,
-                ['left' => $left, 'total' => $instance->dailylimit]
-            ),
-            'nomarkings' => $left !== null && $left <= 0 && $sub->status !== 'pending',
-            'minutes' => max(1, (int)$task->timelimit),
-            'backurl' => (new \moodle_url('/mod/aispeakwrite/practice.php', ['id' => $cm->id, 'kind' => 'speaking']))->out(false),
-            'config' => json_encode([
-                'cmid' => (int)$cm->id,
-                'subid' => (int)$sub->id,
-                'locale' => $instance->targetlang,
-                'seconds' => max(60, (int)$task->timelimit * 60),
-                'conversation' => $conversation,
-                'partner' => (bool)get_config('mod_aispeakwrite', 'partner'),
+        return array_merge(
+            self::task_panel($task),
+            [
+                'cmid' => $cm->id,
+                'subid' => $sub->id,
+                'lang' => $instance->targetlang,
                 'pending' => $sub->status === 'pending',
-            ]),
-        ]);
+                'tipline' => (string)(implode(' · ', array_slice(array_column($merged['tips'], 'name'), 0, 4))),
+                'hastips' => !empty($merged['tips']),
+                'conversation' => $conversation,
+                'markingsleft' => $left === null ? '' : get_string(
+                    'markingsleft',
+                    self::P,
+                    ['left' => $left, 'total' => $instance->dailylimit]
+                ),
+                'nomarkings' => $left !== null && $left <= 0 && $sub->status !== 'pending',
+                'minutes' => max(1, (int)$task->timelimit),
+                'backurl' => self::url('practice.php', ['id' => $cm->id, 'kind' => 'speaking']),
+                'config' => json_encode(
+                    [
+                        'cmid' => (int)$cm->id,
+                        'subid' => (int)$sub->id,
+                        'locale' => $instance->targetlang,
+                        'seconds' => max(60, (int)$task->timelimit * 60),
+                        'conversation' => $conversation,
+                        'partner' => (bool)get_config('mod_aispeakwrite', 'partner'),
+                        'pending' => $sub->status === 'pending',
+                    ]
+                ),
+            ]
+        );
     }
 
     /**
@@ -604,11 +626,7 @@ final class views {
                 'error' => $m['type'] === 'error',
                 'good' => $m['type'] === 'good',
                 'self' => $m['type'] === 'selfcorrection',
-                'tag' => $m['type'] === 'good' ? get_string('scoreswell', self::P)
-                    : ($m['type'] === 'selfcorrection' ? get_string('youfixedit', self::P)
-                    : ($label !== '' ? ($istip ? get_string('schooltip', self::P, (string)($label)) : (string)($label))
-                    : get_string($speaking ? ($m['severity'] === 'unclear' ? 'legend_unclear' : 'legend_form')
-                        : 'legend_fix', self::P))),
+                'tag' => self::note_tag($m, $label, $istip, $speaking),
                 'tagclass' => $m['type'] === 'error' ? ($istip ? 'ink' : 'neutral') : 'good',
                 'severity' => $m['type'] === 'error' && !$speaking ? get_string('severity_' . $m['severity'], self::P) : '',
                 'quote' => (string)($m['text']),
@@ -640,8 +658,11 @@ final class views {
                 $hist = memory::for_user((int)$instance->id, (int)$sub->userid);
                 foreach ($hist as $h) {
                     if ($h['key'] === $m['ruleid'] && $h['total'] - $h['ok'] >= 2) {
-                        $note['memory'] = get_string('seenbefore', self::P, ['missed' => $h['total'] - $h['ok'],
-                            'total' => $h['total']]);
+                        $note['memory'] = get_string(
+                            'seenbefore',
+                            self::P,
+                            ['missed' => $h['total'] - $h['ok'], 'total' => $h['total']]
+                        );
                     }
                 }
             }
@@ -668,8 +689,7 @@ final class views {
             'hasnotes' => !empty($notes),
             'errorcount' => count(array_filter($notes, fn($n) => $n['error'])),
             'goodcount' => count(array_filter($notes, fn($n) => $n['good'])),
-            'backurl' => (new \moodle_url('/mod/aispeakwrite/practice.php', ['id' => $cm->id,
-                'kind' => $sub->kind]))->out(false),
+            'backurl' => self::url('practice.php', ['id' => $cm->id, 'kind' => $sub->kind]),
             'own' => $own,
         ];
         $data['criteria'] = [];
@@ -682,7 +702,7 @@ final class views {
                     'current' => $band === $c['strict']];
             }
             $data['criteria'][] = [
-                'name' => get_string('criterion_' . ($sub->kind === 'speaking' ? 'speaking' : 'writing') . '_' . $key, self::P),
+                'name' => manager::criterion_label($sub->kind, $key, $instance->targetlang),
                 'strict' => $c['strict'], 'exam' => $c['exam'], 'reason' => (string)($c['reason']), 'steps' => $steps,
                 'showexam' => !empty($instance->showtelc),
             ];
@@ -711,8 +731,13 @@ final class views {
             );
             $data['haspronunciation'] = !empty($data['pronunciation']);
             $data['selfcount'] = count(array_filter($notes, fn($n) => $n['self']));
-            $data['unclearcount'] = count(array_filter($fb['marks'] ?? [], fn($m) => $m['severity'] === 'unclear'
-                && $m['type'] === 'error'));
+            $data['unclearcount'] = count(
+                array_filter(
+                    $fb['marks'] ?? [],
+                    fn($m) => $m['severity'] === 'unclear'
+                    && $m['type'] === 'error'
+                )
+            );
             $data['repeaturl'] = self::task_url($cm, $task);
             $data['speakconfig'] = json_encode(['locale' => $instance->targetlang]);
         } else {
@@ -744,12 +769,19 @@ final class views {
         foreach ($fb['improve'] ?? [] as $i) {
             $data['improve'][] = [
                 'quote' => (string)($i['quote']), 'tip' => (string)($i['tip']),
-                'rewrites' => array_map(fn($w) => ['label' => $w['ruleid'] !== ''
-                    ? (string)(tips::label($w['ruleid'], $merged['tips'])) : '', 'text' => (string)($w['text'])], $i['rewrites']),
+                'rewrites' => array_map(
+                    fn($w) => ['label' => $w['ruleid'] !== ''
+                    ? (string)(tips::label($w['ruleid'], $merged['tips'])) : '',
+                    'text' => (string)($w['text'])],
+                    $i['rewrites']
+                ),
             ];
         }
-        $data['vocabulary'] = array_map(fn($v) => ['word' => (string)($v['word']), 'count' => $v['count'],
-            'alternatives' => (string)(implode(' · ', $v['alternatives']))], $fb['vocabulary'] ?? []);
+        $data['vocabulary'] = array_map(
+            fn($v) => ['word' => (string)($v['word']), 'count' => $v['count'],
+            'alternatives' => (string)(implode(' · ', $v['alternatives']))],
+            $fb['vocabulary'] ?? []
+        );
         $data['hascommunication'] = $data['strengths'] || $data['improve'] || $data['vocabulary'];
 
         if ($own) {
@@ -757,10 +789,13 @@ final class views {
                 && $sub->kind === 'writing';
             $data['canrewrite'] = $canrewrite;
             $data['rewriteurl'] = self::task_url($cm, $task);
-            $data['nextmode'] = $canrewrite ? get_string('fbmode_' . manager::mode_for_attempt(
-                $instance,
-                (int)$sub->attempt + 1
-            ), self::P) : '';
+            $data['nextmode'] = $canrewrite ? get_string(
+                'fbmode_' . manager::mode_for_attempt(
+                    $instance,
+                    (int)$sub->attempt + 1
+                ),
+                self::P
+            ) : '';
         }
         return $data;
     }
@@ -861,5 +896,41 @@ final class views {
             $offset += $len + 1;
         }
         return $out;
+    }
+
+    /**
+     * A link to one of this plugin's pages.
+     *
+     * @param string $page file name, e.g. "manage.php"
+     * @param array $params
+     * @return string
+     */
+    protected static function url(string $page, array $params): string {
+        return (new \moodle_url('/mod/aispeakwrite/' . $page, $params))->out(false);
+    }
+
+    /**
+     * The tag shown on a feedback note: what kind of mark it is, or the tip or rule it is about.
+     *
+     * @param array $m the mark
+     * @param string $label the tip or pattern name, or ''
+     * @param bool $istip whether the label is one of the school's tips
+     * @param bool $speaking
+     * @return string
+     */
+    protected static function note_tag(array $m, string $label, bool $istip, bool $speaking): string {
+        if ($m['type'] === 'good') {
+            return get_string('scoreswell', self::P);
+        }
+        if ($m['type'] === 'selfcorrection') {
+            return get_string('youfixedit', self::P);
+        }
+        if ($label !== '') {
+            return $istip ? get_string('schooltip', self::P, $label) : $label;
+        }
+        if (!$speaking) {
+            return get_string('legend_fix', self::P);
+        }
+        return get_string($m['severity'] === 'unclear' ? 'legend_unclear' : 'legend_form', self::P);
     }
 }

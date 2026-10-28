@@ -82,19 +82,30 @@ final class memory {
      */
     public static function update(int $aid, int $userid, string $key, string $label, bool $ok): void {
         global $DB;
-        $row = $DB->get_record('aispeakwrite_memory', ['aispeakwriteid' => $aid, 'userid' => $userid,
-            'patternkey' => $key]);
+        $row = $DB->get_record(
+            'aispeakwrite_memory',
+            ['aispeakwriteid' => $aid, 'userid' => $userid, 'patternkey' => $key]
+        );
         $type = str_starts_with($key, 'tip:') ? 'tip' : (str_starts_with($key, 'content:') ? 'content' : 'grammar');
         if (!$row) {
-            $DB->insert_record('aispeakwrite_memory', (object)['aispeakwriteid' => $aid, 'userid' => $userid,
+            $DB->insert_record(
+                'aispeakwrite_memory',
+                (object)['aispeakwriteid' => $aid, 'userid' => $userid,
                 'patternkey' => $key, 'label' => \core_text::substr($label, 0, 255), 'ptype' => $type,
-                'hits' => $ok ? 1 : 0, 'misses' => $ok ? 0 : 1, 'recent' => $ok ? '1' : '0', 'timemodified' => time()]);
+                'hits' => $ok ? 1 : 0,
+                'misses' => $ok ? 0 : 1,
+                'recent' => $ok ? '1' : '0',
+                'timemodified' => time()]
+            );
             return;
         }
         $recent = substr($row->recent . ($ok ? '1' : '0'), -self::KEEP);
-        $DB->update_record('aispeakwrite_memory', (object)['id' => $row->id, 'label' => \core_text::substr($label, 0, 255),
+        $DB->update_record(
+            'aispeakwrite_memory',
+            (object)['id' => $row->id, 'label' => \core_text::substr($label, 0, 255),
             'hits' => $row->hits + ($ok ? 1 : 0), 'misses' => $row->misses + ($ok ? 0 : 1), 'recent' => $recent,
-            'timemodified' => time()]);
+            'timemodified' => time()]
+        );
     }
 
     /**
@@ -110,16 +121,37 @@ final class memory {
         $out = [];
         foreach ($rows as $row) {
             $out[] = [
-                'key' => $row->patternkey, 'label' => $row->label, 'type' => $row->ptype,
+                'key' => $row->patternkey, 'label' => self::display_label($row->patternkey, $row->label), 'type' => $row->ptype,
                 'ok' => substr_count($row->recent, '1'), 'total' => strlen($row->recent), 'recent' => $row->recent,
             ];
         }
-        usort($out, function ($a, $b) {
-            $ra = $a['total'] ? $a['ok'] / $a['total'] : 1;
-            $rb = $b['total'] ? $b['ok'] / $b['total'] : 1;
-            return $ra <=> $rb ?: $b['total'] <=> $a['total'];
-        });
+        usort(
+            $out,
+            function ($a, $b) {
+                $ra = $a['total'] ? $a['ok'] / $a['total'] : 1;
+                $rb = $b['total'] ? $b['ok'] / $b['total'] : 1;
+                return $ra <=> $rb ?: $b['total'] <=> $a['total'];
+            }
+        );
         return $out;
+    }
+
+    /**
+     * The label to show for a stored pattern, in the viewer's own language.
+     *
+     * Grammar patterns and task points are looked up again, so a teacher reading a French-speaking learner's focus areas
+     * sees them in the teacher's language. School tips keep the name the school gave them.
+     *
+     * @param string $key pattern key, for example grammar:subjunctive
+     * @param string $stored the label saved when the pattern was recorded
+     * @return string
+     */
+    public static function display_label(string $key, string $stored): string {
+        if (str_starts_with($key, 'grammar:') || $key === 'content:points') {
+            $label = tips::label($key, []);
+            return $label !== '' ? $label : $stored;
+        }
+        return $stored;
     }
 
     /**

@@ -225,8 +225,11 @@ function aispeakwrite_get_user_grades($instance, $userid = 0) {
         $where = 'AND userid = :userid';
         $params['userid'] = $userid;
     }
-    $users = $DB->get_fieldset_sql("SELECT DISTINCT userid FROM {aispeakwrite_sub}
-        WHERE aispeakwriteid = :aid AND status = 'marked' $where", $params);
+    $users = $DB->get_fieldset_sql(
+        "SELECT DISTINCT userid FROM {aispeakwrite_sub}
+        WHERE aispeakwriteid = :aid AND status = 'marked' $where",
+        $params
+    );
     $grades = [];
     foreach ($users as $uid) {
         $best = submissions::best_by_task((int)$instance->id, (int)$uid);

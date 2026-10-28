@@ -39,14 +39,23 @@ class converse extends base {
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'Course module id'),
-            'subid' => new external_value(PARAM_INT, 'Draft id'),
-            'turns' => new external_multiple_structure(new external_single_structure([
-                'role' => new external_value(PARAM_ALPHA, 'learner or partner'),
-                'text' => new external_value(PARAM_TEXT, 'What was said'),
-            ]), 'Conversation so far (empty: the partner opens it)', VALUE_DEFAULT, []),
-        ]);
+        return new external_function_parameters(
+            [
+                'cmid' => new external_value(PARAM_INT, 'Course module id'),
+                'subid' => new external_value(PARAM_INT, 'Draft id'),
+                'turns' => new external_multiple_structure(
+                    new external_single_structure(
+                        [
+                            'role' => new external_value(PARAM_ALPHA, 'learner or partner'),
+                            'text' => new external_value(PARAM_TEXT, 'What was said'),
+                        ]
+                    ),
+                    'Conversation so far (empty: the partner opens it)',
+                    VALUE_DEFAULT,
+                    []
+                ),
+            ]
+        );
     }
 
     /**
@@ -87,11 +96,13 @@ class converse extends base {
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {
-        return new external_single_structure([
-            'ok' => new external_value(PARAM_BOOL, 'A reply came back'),
-            'reply' => new external_value(PARAM_TEXT, 'What the partner says'),
-            'done' => new external_value(PARAM_BOOL, 'The partner thinks the conversation is complete'),
-            'message' => new external_value(PARAM_TEXT, 'Message for the learner'),
-        ]);
+        return new external_single_structure(
+            [
+                'ok' => new external_value(PARAM_BOOL, 'A reply came back'),
+                'reply' => new external_value(PARAM_TEXT, 'What the partner says'),
+                'done' => new external_value(PARAM_BOOL, 'The partner thinks the conversation is complete'),
+                'message' => new external_value(PARAM_TEXT, 'Message for the learner'),
+            ]
+        );
     }
 }

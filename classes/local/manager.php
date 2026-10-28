@@ -36,6 +36,79 @@ final class manager {
     /** @var string[] Criteria keys, in display order. */
     public const CRITERIA = ['task', 'communication', 'form'];
 
+    /** @var string[] Languages that can be learned, as BCP 47 tags. */
+    public const LANGUAGES = ['de-DE', 'de-AT', 'de-CH', 'en-GB', 'en-US', 'fr-FR', 'es-ES', 'it-IT', 'nl-NL', 'pt-PT'];
+
+    /** @var string[][] Informal and formal forms of address, by language (none for English). */
+    public const ADDRESS = [
+        'de' => ['du', 'Sie'], 'fr' => ['tu', 'vous'], 'es' => ['tú', 'usted'], 'it' => ['tu', 'Lei'],
+        'nl' => ['jij', 'u'], 'pt' => ['tu', 'você'],
+    ];
+
+    /** @var string[][] The telc exam's own German names for the criteria, shown when German is being learned. */
+    public const GERMAN_CRITERIA = [
+        'writing' => ['task' => 'Aufgabenbewältigung', 'communication' => 'Kommunikative Gestaltung',
+            'form' => 'Formale Richtigkeit'],
+        'speaking' => ['task' => 'Aufgabenbewältigung', 'communication' => 'Ausdrucksfähigkeit',
+            'form' => 'Formale Richtigkeit'],
+    ];
+
+    /**
+     * The two-letter code of the language being learned ("de" for de-AT).
+     *
+     * @param string|null $targetlang
+     * @return string
+     */
+    public static function language_family(?string $targetlang): string {
+        $base = strtolower(substr((string)$targetlang, 0, 2));
+        return in_array($base, ['de', 'en', 'fr', 'es', 'it', 'nl', 'pt'], true) ? $base : 'de';
+    }
+
+    /**
+     * The default language being learned for new activities (site setting, German if unset).
+     *
+     * @return string
+     */
+    public static function default_language(): string {
+        $lang = (string)get_config('mod_aispeakwrite', 'defaulttargetlang');
+        return in_array($lang, self::LANGUAGES, true) ? $lang : 'de-DE';
+    }
+
+    /**
+     * A criterion's name, in the interface language. For German, the telc exam's own name comes first.
+     *
+     * @param string $kind writing or speaking
+     * @param string $key task, communication or form
+     * @param string|null $targetlang
+     * @return string
+     */
+    public static function criterion_label(string $kind, string $key, ?string $targetlang): string {
+        $kind = $kind === 'speaking' ? 'speaking' : 'writing';
+        $label = get_string('criterion_' . $kind . '_' . $key, 'mod_aispeakwrite');
+        if (self::language_family($targetlang) === 'de' && isset(self::GERMAN_CRITERIA[$kind][$key])) {
+            return self::GERMAN_CRITERIA[$kind][$key] . ' · ' . $label;
+        }
+        return $label;
+    }
+
+    /**
+     * The form-of-address choices for a writing task, labelled for the language being learned.
+     *
+     * Stored values stay "du", "sie" and "any" (informal, formal, either) whatever the language.
+     *
+     * @param string|null $targetlang
+     * @return string[]
+     */
+    public static function formality_options(?string $targetlang): array {
+        $p = 'mod_aispeakwrite';
+        $pair = self::ADDRESS[self::language_family($targetlang)] ?? null;
+        return [
+            'du' => $pair ? get_string('formality_informal', $p, $pair[0]) : get_string('formality_informal_plain', $p),
+            'sie' => $pair ? get_string('formality_formal', $p, $pair[1]) : get_string('formality_formal_plain', $p),
+            'any' => get_string('formality_any', $p),
+        ];
+    }
+
     /**
      * Cleans the activity settings before they are saved.
      *
@@ -52,8 +125,8 @@ final class manager {
         $data->rewritelimit = max(0, min(10, (int)($data->rewritelimit ?? 2)));
         $data->activitytips = \core_text::substr(trim((string)($data->activitytips ?? '')), 0, tips::MAXCHARS);
         $data->examlevel = \core_text::substr(trim((string)($data->examlevel ?? 'B1')), 0, 10);
-        $data->targetlang = preg_match('/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/', (string)($data->targetlang ?? ''))
-            ? $data->targetlang : 'de-DE';
+        $data->targetlang = in_array((string)($data->targetlang ?? ''), self::LANGUAGES, true)
+            ? $data->targetlang : self::default_language();
         $data->feedbacklang = preg_match('/^[a-z]{2,3}(_[a-z]{2,4})?$/', (string)($data->feedbacklang ?? ''))
             ? $data->feedbacklang : '';
         $data->examdate = (int)($data->examdate ?? 0);
@@ -182,8 +255,12 @@ final class manager {
      */
     public static function attempts_used(int $taskid, int $userid): int {
         global $DB;
-        return $DB->count_records_select('aispeakwrite_sub', "taskid = :taskid AND userid = :userid
-            AND status IN ('pending', 'marked')", ['taskid' => $taskid, 'userid' => $userid]);
+        return $DB->count_records_select(
+            'aispeakwrite_sub',
+            "taskid = :taskid AND userid = :userid
+            AND status IN ('pending', 'marked')",
+            ['taskid' => $taskid, 'userid' => $userid]
+        );
     }
 
     /**
@@ -291,8 +368,11 @@ final class manager {
      */
     public static function next_sortorder(int $aid): int {
         global $DB;
-        return (int)$DB->get_field_sql('SELECT COALESCE(MAX(sortorder), 0) + 1 FROM {aispeakwrite_task}
-            WHERE aispeakwriteid = ?', [$aid]);
+        return (int)$DB->get_field_sql(
+            'SELECT COALESCE(MAX(sortorder), 0) + 1 FROM {aispeakwrite_task}
+            WHERE aispeakwriteid = ?',
+            [$aid]
+        );
     }
 
     /**
@@ -325,8 +405,13 @@ final class manager {
                 $DB->set_field('aispeakwrite_taskuser', 'duedate', $duedate, ['id' => $row->id]);
                 continue;
             }
-            $DB->insert_record('aispeakwrite_taskuser', (object)['taskid' => $task->id, 'userid' => $userid,
-                'duedate' => $duedate, 'assignedby' => $by, 'timecreated' => time()]);
+            $DB->insert_record(
+                'aispeakwrite_taskuser',
+                (object)['taskid' => $task->id, 'userid' => $userid,
+                'duedate' => $duedate,
+                'assignedby' => $by,
+                'timecreated' => time()]
+            );
             $n++;
         }
         return $n;

@@ -24,7 +24,7 @@
         "cmid": 3, "onanalytics": true, "learnercount": 14,
         "kpis": [{"label": "Marked (writing / speaking)", "value": "212 / 25", "note": "Last 30 days"}],
         "hasissues": true,
-        "issues": [{"label": "Satzanfang", "type": "School tip", "pct": 64, "selected": true, "url": "#"}],
+        "issues": [{"label": "Satzanfang", "type": "School tip", "pct": 64, "affected": 7, "learners": 11, "selected": true, "url": "#"}],
         "current": {"label": "Satzanfang", "type": "School tip", "key": "tip:satzanfang", "haspeople": true,
             "peopleline": "3 learners", "people": [{"name": "Justus", "recentpct": 40, "line": "2 of 5 right",
             "userid": 5}], "userids": "5", "hastasks": true, "tasks": [{"id": 1, "name": "Konnektoren"}],
@@ -61,7 +61,7 @@
                 <a class="asw-issue" href="{{url}}" {{#selected}}aria-current="true"{{/selected}}>
                     <span><strong>{{label}}</strong><br><span class="asw-sub">{{type}}</span></span>
                     <span class="asw-bar"><span style="width: {{pct}}%;"></span></span>
-                    <strong class="asw-num" style="text-align: right;">{{pct}}%</strong>
+                    <strong class="asw-num" style="text-align: right;">{{affected}}/{{learners}}</strong>
                 </a>
             {{/issues}}
         </section>

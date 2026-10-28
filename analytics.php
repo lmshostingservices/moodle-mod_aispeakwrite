@@ -51,7 +51,7 @@ if (optional_param('assign', 0, PARAM_BOOL) && confirm_sesskey()) {
     $userids = array_filter(array_map('intval', explode(',', required_param('userids', PARAM_SEQUENCE))));
     $enrolled = array_keys(get_enrolled_users($context, 'mod/aispeakwrite:practise', 0, 'u.id'));
     $userids = array_values(array_intersect($userids, $enrolled));
-    $due = optional_param('due', '', PARAM_TEXT);
+    $due = optional_param('due', '', PARAM_ALPHANUMEXT);
     $duetime = 0;
     if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $due, $m)) {
         $duetime = make_timestamp((int)$m[1], (int)$m[2], (int)$m[3], 23, 59);

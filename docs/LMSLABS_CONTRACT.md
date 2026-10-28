@@ -73,7 +73,7 @@ learner in Moodle). A teacher's "Test with a sample answer" uses the same route 
     {"id": "tip:satzanfang", "name": "Satzanfang", "tip": "Nicht mit ich/wir beginnen – mit einem Detail starten.",
      "example": "Am Samstag komme ich gern.", "level": "school"}
   ],
-  "patterns": [{"id": "grammar:verbsecond", "name": "Verb in second position"}, "…"],
+  "patterns": [{"id": "grammar:verbsecond", "name": "Verb in second position"}, "…"],  // the set for targetLanguage
   "scoring": {"criteria": ["task", "communication", "form"], "bands": [0, 3, 9, 15], "examScore": true},
   "options": {"markGood": true},
   "answer": {"text": "Lieber Tim, …", "previousText": "(only on draft 2+) the previous marked draft"},
@@ -105,6 +105,12 @@ No learner name, email, Moodle user id or other identifier is sent.
   `why`: Moodle stores them and shows them only after the rewrite.
 - **Explain** (`mode: explain`): `correction`, `why`, `rule`, `examples`.
 - Cite tips and patterns **only** by the ids sent. Any other id is dropped by Moodle.
+- `targetLanguage` is the language being learned: `de-DE`, `de-AT`, `de-CH`, `en-GB`, `en-US`, `fr-FR`, `es-ES`, `it-IT`,
+  `nl-NL` or `pt-PT`. Mark and correct in that language; write hints, explanations and rules in `feedbackLanguage`, keeping
+  grammar terms of the language being learned (Dativ, subjonctif, ser/estar) as they are. `patterns` holds the shared
+  patterns plus those for that language (for example `grammar:subjunctive` for French, `grammar:serestar` for Spanish).
+- `task.formality` is `du` (informal), `sie` (formal) or `any`, whatever the language: tu/vous, tú/usted, tu/Lei, jij/u,
+  tu/você. English has no separate forms; treat it as the register of the text.
 - `examples`: 2–3 short new sentences that use the same rule, at the task's level, on the task's topic, in the
   same register.
 - Scores per criterion: `atg` (the school's strict score) and `telc` (realistic exam score), each one of 0, 3, 9, 15.

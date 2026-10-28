@@ -150,12 +150,14 @@ final class marker_test extends \advanced_testcase {
      * Speaking answers are marked on the learner's turns only.
      */
     public function test_answer_text_speaking(): void {
-        $sub = (object)['kind' => 'speaking', 'content' => json_encode(['turns' => [
-            ['role' => 'partner', 'text' => 'Hallo!'],
-            ['role' => 'learner', 'text' => 'Hallo Lena.'],
-            ['role' => 'robot', 'text' => 'ignored'],
-            ['role' => 'learner', 'text' => 'Wir feiern am Freitag.'],
-        ]])];
+        $sub = (object)['kind' => 'speaking', 'content' => json_encode(
+            ['turns' => [
+                ['role' => 'partner', 'text' => 'Hallo!'],
+                ['role' => 'learner', 'text' => 'Hallo Lena.'],
+                ['role' => 'robot', 'text' => 'ignored'],
+                ['role' => 'learner', 'text' => 'Wir feiern am Freitag.'],
+            ]]
+        )];
         $this->assertSame("Hallo Lena.\nWir feiern am Freitag.", marker::answer_text($sub));
         $this->assertCount(3, marker::turns($sub));
     }

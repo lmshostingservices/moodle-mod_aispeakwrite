@@ -65,7 +65,10 @@ foreach (
     $learners[$u->id] = fullname($u);
 }
 
-$form = new task_form(null, ['kind' => $kind, 'groups' => $groups, 'learners' => $learners]);
+$form = new task_form(
+    null,
+    ['kind' => $kind, 'groups' => $groups, 'learners' => $learners, 'targetlang' => $instance->targetlang]
+);
 if ($task) {
     $values = clone $task;
     $values->task = $task->id;

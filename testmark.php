@@ -75,7 +75,8 @@ if ($text !== '' && confirm_sesskey()) {
             $data['result'],
             marker::answer_text($sub),
             $task,
-            $merged['tips']
+            $merged['tips'],
+            $instance->targetlang
         ) : null;
         if ($fb === null) {
             throw new moodle_exception('unusableresult', 'mod_aispeakwrite', '', '-');
@@ -92,15 +93,18 @@ if ($text !== '' && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->render_from_template('mod_aispeakwrite/testmark', [
-    'title' => format_string($task->title),
-    'actionurl' => $url->out(false),
-    'sesskey' => sesskey(),
-    'sample' => $text,
-    'think' => $mode === 'think',
-    'error' => $error,
-    'backurl' => (new moodle_url('/mod/aispeakwrite/manage.php', ['id' => $cm->id]))->out(false),
-]);
+echo $OUTPUT->render_from_template(
+    'mod_aispeakwrite/testmark',
+    [
+        'title' => format_string($task->title),
+        'actionurl' => $url->out(false),
+        'sesskey' => sesskey(),
+        'sample' => $text,
+        'think' => $mode === 'think',
+        'error' => $error,
+        'backurl' => (new moodle_url('/mod/aispeakwrite/manage.php', ['id' => $cm->id]))->out(false),
+    ]
+);
 if ($result) {
     $PAGE->requires->js_call_amd('mod_aispeakwrite/feedback', 'init', ['#asw-feedback-0']);
     echo $OUTPUT->render_from_template('mod_aispeakwrite/feedback', $result);

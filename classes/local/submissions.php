@@ -39,8 +39,16 @@ final class submissions {
      */
     public static function open_draft(\stdClass $instance, \stdClass $task, int $userid): ?\stdClass {
         global $DB;
-        $open = $DB->get_records_select(self::TABLE, "taskid = :taskid AND userid = :userid
-            AND status IN ('draft', 'pending', 'failed')", ['taskid' => $task->id, 'userid' => $userid], 'id DESC', '*', 0, 1);
+        $open = $DB->get_records_select(
+            self::TABLE,
+            "taskid = :taskid AND userid = :userid
+            AND status IN ('draft', 'pending', 'failed')",
+            ['taskid' => $task->id, 'userid' => $userid],
+            'id DESC',
+            '*',
+            0,
+            1
+        );
         if ($open) {
             return reset($open);
         }
@@ -48,8 +56,11 @@ final class submissions {
             return null;
         }
         $last = self::latest_marked((int)$task->id, $userid);
-        $attempt = (int)$DB->get_field_sql('SELECT COALESCE(MAX(attempt), 0) + 1 FROM {' . self::TABLE . '}
-            WHERE taskid = ? AND userid = ?', [$task->id, $userid]);
+        $attempt = (int)$DB->get_field_sql(
+            'SELECT COALESCE(MAX(attempt), 0) + 1 FROM {' . self::TABLE . '}
+            WHERE taskid = ? AND userid = ?',
+            [$task->id, $userid]
+        );
         $now = time();
         $sub = (object)[
             'aispeakwriteid' => $instance->id, 'taskid' => $task->id, 'userid' => $userid, 'attempt' => $attempt,
@@ -92,12 +103,15 @@ final class submissions {
         if (!in_array($sub->status, ['draft', 'failed'], true)) {
             throw new \moodle_exception('alreadymarked', 'mod_aispeakwrite');
         }
-        $DB->update_record(self::TABLE, (object)[
-            'id' => $sub->id,
-            'content' => \core_text::substr(self::plain($content), 0, 20000),
-            'notes' => \core_text::substr(self::plain($notes), 0, 4000),
-            'timemodified' => time(),
-        ]);
+        $DB->update_record(
+            self::TABLE,
+            (object)[
+                'id' => $sub->id,
+                'content' => \core_text::substr(self::plain($content), 0, 20000),
+                'notes' => \core_text::substr(self::plain($notes), 0, 4000),
+                'timemodified' => time(),
+            ]
+        );
     }
 
     /**
@@ -173,11 +187,14 @@ final class submissions {
      */
     public static function best_by_task(int $aid, int $userid): array {
         global $DB;
-        $rows = $DB->get_records_sql("SELECT taskid, MAX(score / maxscore) AS best
+        $rows = $DB->get_records_sql(
+            "SELECT taskid, MAX(score / maxscore) AS best
                                         FROM {" . self::TABLE . "}
                                        WHERE aispeakwriteid = :aid AND userid = :userid AND status = 'marked'
                                              AND maxscore > 0
-                                    GROUP BY taskid", ['aid' => $aid, 'userid' => $userid]);
+                                    GROUP BY taskid",
+            ['aid' => $aid, 'userid' => $userid]
+        );
         $out = [];
         foreach ($rows as $row) {
             $out[(int)$row->taskid] = round((float)$row->best * 100, 2);

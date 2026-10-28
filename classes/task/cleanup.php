@@ -52,8 +52,10 @@ class cleanup extends \core\task\scheduled_task {
             'id, kind, itemid'
         );
         foreach ($old as $op) {
-            $DB->update_record('aispeakwrite_op', (object)['id' => $op->id, 'state' => 'expired', 'body' => '',
-                'timemodified' => time()]);
+            $DB->update_record(
+                'aispeakwrite_op',
+                (object)['id' => $op->id, 'state' => 'expired', 'body' => '', 'timemodified' => time()]
+            );
             if ($op->kind === 'mark') {
                 $DB->set_field_select(
                     'aispeakwrite_sub',

@@ -37,28 +37,37 @@ class submit_speaking extends base {
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
-        return new external_function_parameters([
-            'cmid' => new external_value(PARAM_INT, 'Course module id'),
-            'subid' => new external_value(PARAM_INT, 'Draft id'),
-            'turns' => new external_multiple_structure(new external_single_structure([
-                'role' => new external_value(PARAM_ALPHA, 'learner or partner'),
-                'text' => new external_value(PARAM_TEXT, 'What was said'),
-            ]), 'Conversation turns', VALUE_DEFAULT, []),
-            'seconds' => new external_value(PARAM_INT, 'Session length', VALUE_DEFAULT, 0),
-            'speakingseconds' => new external_value(PARAM_INT, 'Time the learner was speaking', VALUE_DEFAULT, 0),
-            'longpauses' => new external_value(
-                PARAM_INT,
-                'Silences over 3 seconds while it was the learner\'s turn',
-                VALUE_DEFAULT,
-                0
-            ),
-            'flow' => new external_value(
-                PARAM_SEQUENCE,
-                'Speech activity per bucket (0-9), comma-separated',
-                VALUE_DEFAULT,
-                ''
-            ),
-        ]);
+        return new external_function_parameters(
+            [
+                'cmid' => new external_value(PARAM_INT, 'Course module id'),
+                'subid' => new external_value(PARAM_INT, 'Draft id'),
+                'turns' => new external_multiple_structure(
+                    new external_single_structure(
+                        [
+                            'role' => new external_value(PARAM_ALPHA, 'learner or partner'),
+                            'text' => new external_value(PARAM_TEXT, 'What was said'),
+                        ]
+                    ),
+                    'Conversation turns',
+                    VALUE_DEFAULT,
+                    []
+                ),
+                'seconds' => new external_value(PARAM_INT, 'Session length', VALUE_DEFAULT, 0),
+                'speakingseconds' => new external_value(PARAM_INT, 'Time the learner was speaking', VALUE_DEFAULT, 0),
+                'longpauses' => new external_value(
+                    PARAM_INT,
+                    'Silences over 3 seconds while it was the learner\'s turn',
+                    VALUE_DEFAULT,
+                    0
+                ),
+                'flow' => new external_value(
+                    PARAM_SEQUENCE,
+                    'Speech activity per bucket (0-9), comma-separated',
+                    VALUE_DEFAULT,
+                    ''
+                ),
+            ]
+        );
     }
 
     /**
@@ -83,9 +92,12 @@ class submit_speaking extends base {
         string $flow = ''
     ): array {
         global $DB;
-        $params = self::validate_parameters(self::execute_parameters(), ['cmid' => $cmid, 'subid' => $subid,
+        $params = self::validate_parameters(
+            self::execute_parameters(),
+            ['cmid' => $cmid, 'subid' => $subid,
             'turns' => $turns, 'seconds' => $seconds, 'speakingseconds' => $speakingseconds, 'longpauses' => $longpauses,
-            'flow' => $flow]);
+            'flow' => $flow]
+        );
         [$cm, $context, $instance, $task, $sub] = self::load($params['cmid'], $params['subid']);
         if ($task->kind !== 'speaking') {
             throw new \moodle_exception('wrongkind', 'mod_aispeakwrite');
@@ -109,10 +121,14 @@ class submit_speaking extends base {
                 }
                 $seconds = max(0, min(3600, $params['seconds']));
                 $speaking = max(0, min($seconds, $params['speakingseconds']));
-                $flowvalues = array_slice(array_map(
-                    fn($v) => max(0, min(9, (int)$v)),
-                    array_filter(explode(',', $params['flow']), 'strlen')
-                ), 0, 120);
+                $flowvalues = array_slice(
+                    array_map(
+                        fn($v) => max(0, min(9, (int)$v)),
+                        array_filter(explode(',', $params['flow']), 'strlen')
+                    ),
+                    0,
+                    120
+                );
                 $metrics = [
                     'seconds' => $seconds,
                     'speakingseconds' => $speaking,
@@ -120,9 +136,13 @@ class submit_speaking extends base {
                     'wpm' => $speaking > 0 ? (int)round($learnerwords / ($speaking / 60)) : 0,
                     'flow' => $flowvalues,
                 ];
-                $DB->update_record('aispeakwrite_sub', (object)['id' => $sub->id,
+                $DB->update_record(
+                    'aispeakwrite_sub',
+                    (object)['id' => $sub->id,
                     'content' => json_encode(['turns' => $clean], JSON_UNESCAPED_UNICODE),
-                    'metrics' => json_encode($metrics), 'timemodified' => time()]);
+                    'metrics' => json_encode($metrics),
+                    'timemodified' => time()]
+                );
                 $sub = $DB->get_record('aispeakwrite_sub', ['id' => $sub->id], '*', MUST_EXIST);
             }
             $marked = marker::mark($instance, $task, $sub, $context);

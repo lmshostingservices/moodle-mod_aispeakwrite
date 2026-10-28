@@ -41,24 +41,58 @@ class backup_aispeakwrite_activity_structure_step extends backup_activity_struct
     protected function define_structure() {
         $userinfo = $this->get_setting_value('userinfo');
 
-        $root = new backup_nested_element('aispeakwrite', ['id'], [
-            'name', 'intro', 'introformat', 'correctionmode', 'showtelc', 'showgood', 'sendhistory', 'dailylimit',
-            'rewritelimit', 'activitytips', 'examlevel', 'targetlang', 'feedbacklang', 'examdate', 'grade',
-            'completionmarked', 'timecreated', 'timemodified']);
+        $root = new backup_nested_element(
+            'aispeakwrite',
+            ['id'],
+            [
+                'name', 'intro', 'introformat', 'correctionmode', 'showtelc', 'showgood', 'sendhistory', 'dailylimit',
+                'rewritelimit', 'activitytips', 'examlevel', 'targetlang', 'feedbacklang', 'examdate', 'grade',
+                'completionmarked',
+                'timecreated',
+            'timemodified']
+        );
         $tasks = new backup_nested_element('tasks');
-        $task = new backup_nested_element('task', ['id'], [
-            'kind', 'tasktype', 'title', 'topic', 'situation', 'sourcetext', 'points', 'formality', 'targetwords',
-            'timelimit', 'tasktips', 'guide', 'phrases', 'partnerbrief', 'audience', 'groupid', 'duedate', 'visible',
-            'sortorder', 'timecreated', 'timemodified']);
+        $task = new backup_nested_element(
+            'task',
+            ['id'],
+            [
+                'kind', 'tasktype', 'title', 'topic', 'situation', 'sourcetext', 'points', 'formality', 'targetwords',
+                'timelimit', 'tasktips', 'guide', 'phrases', 'partnerbrief', 'audience', 'groupid', 'duedate', 'visible',
+                'sortorder',
+                'timecreated',
+            'timemodified']
+        );
         $taskusers = new backup_nested_element('taskusers');
         $taskuser = new backup_nested_element('taskuser', ['id'], ['userid', 'duedate', 'assignedby', 'timecreated']);
         $subs = new backup_nested_element('subs');
-        $sub = new backup_nested_element('sub', ['id'], [
-            'taskid', 'userid', 'attempt', 'kind', 'status', 'content', 'notes', 'fbmode', 'metrics', 'feedback',
-            'contenthash', 'score', 'examscore', 'maxscore', 'tipsversion', 'timecreated', 'timemodified', 'timemarked']);
+        $sub = new backup_nested_element(
+            'sub',
+            ['id'],
+            [
+                'taskid', 'userid', 'attempt', 'kind', 'status', 'content', 'notes', 'fbmode', 'metrics', 'feedback',
+                'contenthash',
+                'score',
+                'examscore',
+                'maxscore',
+                'tipsversion',
+                'timecreated',
+                'timemodified',
+            'timemarked']
+        );
         $memories = new backup_nested_element('memories');
-        $memory = new backup_nested_element('memory', ['id'], [
-            'userid', 'patternkey', 'label', 'ptype', 'hits', 'misses', 'recent', 'timemodified']);
+        $memory = new backup_nested_element(
+            'memory',
+            ['id'],
+            [
+                'userid',
+                'patternkey',
+                'label',
+                'ptype',
+                'hits',
+                'misses',
+                'recent',
+            'timemodified']
+        );
 
         $root->add_child($tasks);
         $tasks->add_child($task);

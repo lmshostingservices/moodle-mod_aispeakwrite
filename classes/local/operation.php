@@ -49,8 +49,16 @@ final class operation {
             throw new \moodle_exception('operationbusy', 'mod_aispeakwrite');
         }
         try {
-            $rows = $DB->get_records(self::TABLE, ['aispeakwriteid' => $aid, 'userid' => $userid, 'kind' => $kind,
-                'itemid' => $itemid, 'state' => 'pending'], 'id DESC', '*', 0, 1);
+            $rows = $DB->get_records(
+                self::TABLE,
+                ['aispeakwriteid' => $aid, 'userid' => $userid, 'kind' => $kind,
+                'itemid' => $itemid,
+                'state' => 'pending'],
+                'id DESC',
+                '*',
+                0,
+                1
+            );
             if ($rows) {
                 return reset($rows);
             }
@@ -116,9 +124,12 @@ final class operation {
      */
     protected static function finish(\stdClass $row, string $state, int $credits): void {
         global $DB;
-        $DB->update_record(self::TABLE, (object)[
-            'id' => $row->id, 'state' => $state, 'body' => '', 'credits' => $credits, 'timemodified' => time(),
-        ]);
+        $DB->update_record(
+            self::TABLE,
+            (object)[
+                'id' => $row->id, 'state' => $state, 'body' => '', 'credits' => $credits, 'timemodified' => time(),
+            ]
+        );
     }
 
     /**
@@ -160,10 +171,13 @@ final class operation {
             $where .= ' AND aispeakwriteid = :aid';
             $params['aid'] = $aid;
         }
-        $rows = $DB->get_records_sql("SELECT kind, COUNT(1) AS n, SUM(credits) AS credits
+        $rows = $DB->get_records_sql(
+            "SELECT kind, COUNT(1) AS n, SUM(credits) AS credits
                                         FROM {" . self::TABLE . "}
                                        WHERE $where
-                                    GROUP BY kind", $params);
+                                    GROUP BY kind",
+            $params
+        );
         $out = ['credits' => 0, 'mark' => 0, 'converse' => 0, 'test' => 0];
         foreach ($rows as $row) {
             $out['credits'] += (int)$row->credits;

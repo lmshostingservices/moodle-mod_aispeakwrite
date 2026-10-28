@@ -3,13 +3,33 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
-## 1.0.2 - 2026-10-26
+## 1.0.3 - 2026-10-28
 
-- Prepare the marking-only release: disable the unpriced conversation partner by default.
-- Declare the absence of bundled third-party libraries.
-- Use specific text input validation for settings, reports and draft notes while retaining
-  the existing cleaned plain-text handling for learner answers.
-- Require course login explicitly on the activity index.
+Fixes found by testing every language being learned end to end.
+
+- Fixed: only the activity's own language patterns are accepted from LMS Labs, so a French activity can never show a
+  German-only pattern.
+- Fixed: focus areas and class analytics show grammar patterns in the viewer's own language, whoever was marked.
+
+## 1.0.2 - 2026-10-28
+
+Works for every language learners can practise, not only German.
+
+- **Languages to learn**: German (Germany, Austria, Switzerland), English (UK, US), French, Spanish, Italian, Dutch and
+  Portuguese. A new site setting chooses the default for new activities.
+- **Grammar patterns per language**: the AI can cite the shared patterns (verb forms, tenses, articles and gender,
+  agreement, prepositions, word order and more) plus the ones each language needs, for example the subjunctive and
+  past participle agreement in French, ser/estar and por/para in Spanish, essere/avere in Italian, de/het in Dutch,
+  contractions and pronoun position in Portuguese, phrasal verbs in English. German keeps its cases, verb position and
+  separable verbs.
+- **Criteria names** are neutral (content, communication, grammar and spelling; task, expression, accuracy). When
+  German is being learned, the telc exam's German names are shown first, as before.
+- **Form of address** is labelled with the language's own pronouns: tu/vous, tú/usted, tu/Lei, jij/u, tu/você, du/Sie,
+  and informal/formal for English.
+- **Self-corrections when speaking** are recognised from restart words in every language ("euh", "o sea", "cioè",
+  "ik bedoel", "quer dizer", "I mean"…), and ordinary words such as "no" or "non" no longer count as a restart.
+- Tip names with accents (é, ñ, ç, ã) make readable ids.
+- New and changed strings in all 18 interface languages. New tests for every language.
 
 ## 1.0.1 - 2026-10-26
 
@@ -18,6 +38,13 @@ All notable changes to this plugin are documented here, newest first. This proje
   follows each user's Moodle language.
 - The "AI" label on the conversation partner's turns is now translatable.
 - Fixed: the 1.0.0 ZIP could not be installed from Site administration because it contained an empty folder.
+- Security: no PARAM_RAW anywhere. Learners' text is accepted as PARAM_TEXT; the writing screen adds a space after a
+  typed "<" that could start a tag, so text such as "3<4" is kept instead of being cut.
+- The course activity list (index.php) now uses require_login().
+- Added thirdpartylibs.xml (no third-party libraries).
+- Code style: multi-line function calls put the opening bracket last on the line.
+- Class analytics: "Most common mistakes" now ranks tips and grammar patterns by how many learners got them wrong
+  recently (for example 7/12), and lists those learners, most misses first.
 
 ## 1.0.0 - 2026-10-26
 

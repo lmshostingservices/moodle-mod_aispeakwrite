@@ -25,6 +25,15 @@ import Ajax from 'core/ajax';
 import {get_string as getString} from 'core/str';
 
 /**
+ * Plain text that Moodle's PARAM_TEXT keeps exactly: a "<" that could start a tag gets a space after it,
+ * so "3<4" is sent as "3< 4" instead of losing text.
+ *
+ * @param {String} text
+ * @returns {String}
+ */
+const safeText = (text) => text.replace(/<(?=\S|$)/g, '< ');
+
+/**
  * Inserts text at the cursor of a text box.
  *
  * @param {HTMLTextAreaElement} box
@@ -81,7 +90,7 @@ export const init = (cmid, subid) => {
         dirty = false;
         try {
             await Ajax.call([{methodname: 'mod_aispeakwrite_save_draft', args: {
-                cmid: cmid, subid: subid, content: answer.value, notes: notes ? notes.value : '',
+                cmid: cmid, subid: subid, content: safeText(answer.value), notes: safeText(notes ? notes.value : ''),
             }}])[0];
             if (saved) {
                 saved.textContent = await getString('draftsaved', 'mod_aispeakwrite');
@@ -153,7 +162,7 @@ export const init = (cmid, subid) => {
             status.textContent = await getString('marking', 'mod_aispeakwrite');
             try {
                 const result = await Ajax.call([{methodname: 'mod_aispeakwrite_submit', args: {
-                    cmid: cmid, subid: subid, content: answer.value, notes: notes ? notes.value : '',
+                    cmid: cmid, subid: subid, content: safeText(answer.value), notes: safeText(notes ? notes.value : ''),
                 }}])[0];
                 if (result.ok) {
                     window.location.href = result.url;

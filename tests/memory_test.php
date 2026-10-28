@@ -54,15 +54,20 @@ final class memory_test extends \advanced_testcase {
     public function test_record(): void {
         $this->resetAfterTest();
         $tips = tips::parse('Satzanfang: x', 'school');
-        memory::record(7, 3, [
-            'marks' => [
-                ['type' => 'error', 'ruleid' => 'grammar:casedative'],
-                ['type' => 'good', 'ruleid' => 'tip:satzanfang'],
-                ['type' => 'error', 'ruleid' => ''],
+        memory::record(
+            7,
+            3,
+            [
+                'marks' => [
+                    ['type' => 'error', 'ruleid' => 'grammar:casedative'],
+                    ['type' => 'good', 'ruleid' => 'tip:satzanfang'],
+                    ['type' => 'error', 'ruleid' => ''],
+                ],
+                'rulehits' => [['ruleid' => 'grammar:invented', 'ok' => true]],
+                'points' => [['status' => 'short']],
             ],
-            'rulehits' => [['ruleid' => 'grammar:invented', 'ok' => true]],
-            'points' => [['status' => 'short']],
-        ], $tips);
+            $tips
+        );
         $rows = array_column(memory::for_user(7, 3), 'recent', 'key');
         $this->assertSame(
             ['grammar:casedative' => '0', 'content:points' => '0', 'tip:satzanfang' => '1'],

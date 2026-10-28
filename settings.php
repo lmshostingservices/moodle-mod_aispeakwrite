@@ -27,60 +27,89 @@ defined('MOODLE_INTERNAL') || die();
 if ($ADMIN->fulltree) {
     $p = 'mod_aispeakwrite';
 
-    $settings->add(new admin_setting_heading(
-        'mod_aispeakwrite/tipsheading',
-        get_string('schooltipsheading', $p),
-        get_string('schooltipsheading_desc', $p)
-    ));
-    $settings->add(new \mod_aispeakwrite\admin\setting_tips(
-        'mod_aispeakwrite/schooltips',
-        get_string('schooltips', $p),
-        get_string('schooltips_desc', $p),
-        '',
-        PARAM_TEXT,
-        70,
-        12
-    ));
+    $settings->add(
+        new admin_setting_heading(
+            'mod_aispeakwrite/tipsheading',
+            get_string('schooltipsheading', $p),
+            get_string('schooltipsheading_desc', $p)
+        )
+    );
+    $settings->add(
+        new \mod_aispeakwrite\admin\setting_tips(
+            'mod_aispeakwrite/schooltips',
+            get_string('schooltips', $p),
+            get_string('schooltips_desc', $p),
+            '',
+            PARAM_TEXT,
+            70,
+            12
+        )
+    );
 
-    $settings->add(new admin_setting_heading(
-        'mod_aispeakwrite/lmslabsheading',
-        get_string('lmslabsheading', $p),
-        get_string('lmslabsheading_desc', $p) . ' ' .
-        get_string(\mod_aispeakwrite\local\credentials::status(), $p)
-    ));
-    $settings->add(new admin_setting_configtext(
-        'mod_aispeakwrite/lmslabssiteid',
-        get_string('lmslabssiteid', $p),
-        get_string('lmslabssiteid_desc', $p),
-        '',
-        PARAM_ALPHANUMEXT
-    ));
-    $settings->add(new admin_setting_configpasswordunmask(
-        'mod_aispeakwrite/lmslabsapikey',
-        get_string('lmslabsapikey', $p),
-        get_string('lmslabsapikey_desc', $p),
-        ''
-    ));
+    $settings->add(
+        new admin_setting_heading(
+            'mod_aispeakwrite/lmslabsheading',
+            get_string('lmslabsheading', $p),
+            get_string('lmslabsheading_desc', $p) . ' ' .
+            get_string(\mod_aispeakwrite\local\credentials::status(), $p)
+        )
+    );
+    $settings->add(
+        new admin_setting_configtext(
+            'mod_aispeakwrite/lmslabssiteid',
+            get_string('lmslabssiteid', $p),
+            get_string('lmslabssiteid_desc', $p),
+            '',
+            PARAM_ALPHANUMEXT
+        )
+    );
+    $settings->add(
+        new admin_setting_configpasswordunmask(
+            'mod_aispeakwrite/lmslabsapikey',
+            get_string('lmslabsapikey', $p),
+            get_string('lmslabsapikey_desc', $p),
+            ''
+        )
+    );
 
     $settings->add(new admin_setting_heading('mod_aispeakwrite/defaultsheading', get_string('defaultsheading', $p), ''));
-    $settings->add(new admin_setting_configtext(
-        'mod_aispeakwrite/defaultdailylimit',
-        get_string('dailylimit', $p),
-        get_string('dailylimit_help', $p),
-        3,
-        PARAM_INT
-    ));
-    $settings->add(new admin_setting_configcheckbox(
-        'mod_aispeakwrite/partner',
-        get_string('partnerenabled', $p),
-        get_string('partnerenabled_desc', $p),
-        0
-    ));
-    $settings->add(new admin_setting_configtext(
-        'mod_aispeakwrite/lowcredits',
-        get_string('lowcredits', $p),
-        get_string('lowcredits_desc', $p),
-        500,
-        PARAM_INT
-    ));
+    $languages = [];
+    foreach (\mod_aispeakwrite\local\manager::LANGUAGES as $code) {
+        $languages[$code] = get_string('lang_' . str_replace('-', '', strtolower($code)), $p);
+    }
+    $settings->add(
+        new admin_setting_configselect(
+            'mod_aispeakwrite/defaulttargetlang',
+            get_string('defaulttargetlang', $p),
+            get_string('defaulttargetlang_desc', $p),
+            'de-DE',
+            $languages
+        )
+    );
+    $settings->add(
+        new admin_setting_configtext(
+            'mod_aispeakwrite/defaultdailylimit',
+            get_string('dailylimit', $p),
+            get_string('dailylimit_help', $p),
+            3,
+            PARAM_INT
+        )
+    );
+    $settings->add(
+        new admin_setting_configcheckbox(
+            'mod_aispeakwrite/partner',
+            get_string('partnerenabled', $p),
+            get_string('partnerenabled_desc', $p),
+            1
+        )
+    );
+    $settings->add(
+        new admin_setting_configtext(
+            'mod_aispeakwrite/lowcredits',
+            get_string('lowcredits', $p),
+            get_string('lowcredits_desc', $p),
+            500,
+            PARAM_INT
+        )
+    );
 }

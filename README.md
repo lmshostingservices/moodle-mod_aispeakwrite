@@ -7,10 +7,11 @@ translate sentences or hold a spoken conversation with an AI partner, and get fe
 | | |
 |---|---|
 | Component | `mod_aispeakwrite` |
-| Version | 1.0.1 (beta) |
+| Version | 1.0.3 (beta) |
 | Moodle | 4.4 – 5.3 (`requires` 2024042200, `supported` [404, 503]) |
 | PHP | 8.1 or later (8.3+ on Moodle 5.3) |
 | Databases | PostgreSQL, MySQL, MariaDB |
+| Languages learners practise | German (Germany, Austria, Switzerland), English (UK, US), French, Spanish, Italian, Dutch, Portuguese |
 | Interface languages | English, German, French, Spanish, Italian, Dutch, Portuguese (pt, pt_br), Polish, Russian, Ukrainian, Turkish, Arabic, Simplified Chinese, Japanese, Korean, Vietnamese, Thai |
 | Licence | GNU GPL v3 or later |
 

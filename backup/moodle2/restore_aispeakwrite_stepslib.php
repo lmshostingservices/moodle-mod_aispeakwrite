@@ -95,8 +95,10 @@ class restore_aispeakwrite_activity_structure_step extends restore_activity_stru
         $data->assignedby = (int)$this->get_mappingid('user', $data->assignedby);
         $data->duedate = $this->apply_date_offset($data->duedate);
         if (
-            $data->userid && !$DB->record_exists('aispeakwrite_taskuser', ['taskid' => $data->taskid,
-                'userid' => $data->userid])
+            $data->userid && !$DB->record_exists(
+                'aispeakwrite_taskuser',
+                ['taskid' => $data->taskid, 'userid' => $data->userid]
+            )
         ) {
             $DB->insert_record('aispeakwrite_taskuser', $data);
         }
@@ -136,8 +138,12 @@ class restore_aispeakwrite_activity_structure_step extends restore_activity_stru
         $data->aispeakwriteid = $this->get_new_parentid('aispeakwrite');
         $data->userid = $this->get_mappingid('user', $data->userid);
         if (
-            $data->userid && !$DB->record_exists('aispeakwrite_memory', ['aispeakwriteid' => $data->aispeakwriteid,
-                'userid' => $data->userid, 'patternkey' => $data->patternkey])
+            $data->userid && !$DB->record_exists(
+                'aispeakwrite_memory',
+                ['aispeakwriteid' => $data->aispeakwriteid,
+                'userid' => $data->userid,
+                'patternkey' => $data->patternkey]
+            )
         ) {
             $DB->insert_record('aispeakwrite_memory', $data);
         }

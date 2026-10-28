@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
+use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\tips;
 
 /**
@@ -52,11 +53,16 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
 
         $mform->addElement('header', 'feedbackhdr', get_string('feedbacksettings', $p));
         $mform->setExpanded('feedbackhdr');
-        $mform->addElement('select', 'correctionmode', get_string('correctionmode', $p), [
-            'two' => get_string('mode_two', $p),
-            'think' => get_string('mode_thinkonly', $p),
-            'explain' => get_string('mode_explainonly', $p),
-        ]);
+        $mform->addElement(
+            'select',
+            'correctionmode',
+            get_string('correctionmode', $p),
+            [
+                'two' => get_string('mode_two', $p),
+                'think' => get_string('mode_thinkonly', $p),
+                'explain' => get_string('mode_explainonly', $p),
+            ]
+        );
         $mform->addHelpButton('correctionmode', 'correctionmode', $p);
         $mform->setDefault('correctionmode', 'two');
         $mform->addElement('advcheckbox', 'showtelc', get_string('showtelc', $p));
@@ -68,8 +74,12 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         $mform->addHelpButton('sendhistory', 'sendhistory', $p);
         $mform->setDefault('sendhistory', 1);
 
-        $mform->addElement('textarea', 'activitytips', get_string('activitytips', $p), ['rows' => 8, 'cols' => 70,
-            'maxlength' => tips::MAXCHARS]);
+        $mform->addElement(
+            'textarea',
+            'activitytips',
+            get_string('activitytips', $p),
+            ['rows' => 8, 'cols' => 70, 'maxlength' => tips::MAXCHARS]
+        );
         $mform->setType('activitytips', PARAM_TEXT);
         $mform->addHelpButton('activitytips', 'tipsformat', $p);
 
@@ -78,7 +88,7 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         $mform->setType('examlevel', PARAM_ALPHANUMEXT);
         $mform->setDefault('examlevel', 'B1');
         $mform->addElement('select', 'targetlang', get_string('targetlang', $p), self::target_languages());
-        $mform->setDefault('targetlang', 'de-DE');
+        $mform->setDefault('targetlang', manager::default_language());
         $langs = ['' => get_string('feedbacklang_learner', $p)] + get_string_manager()->get_list_of_translations();
         $mform->addElement('select', 'feedbacklang', get_string('feedbacklang', $p), $langs);
         $mform->addHelpButton('feedbacklang', 'feedbacklang', $p);
@@ -106,7 +116,7 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
      */
     public static function target_languages(): array {
         $out = [];
-        foreach (['de-DE', 'de-AT', 'de-CH', 'en-GB', 'en-US', 'fr-FR', 'es-ES', 'it-IT', 'nl-NL', 'pt-PT'] as $code) {
+        foreach (manager::LANGUAGES as $code) {
             $out[$code] = get_string('lang_' . str_replace('-', '', strtolower($code)), 'mod_aispeakwrite');
         }
         return $out;

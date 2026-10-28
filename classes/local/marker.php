@@ -28,6 +28,13 @@ namespace mod_aispeakwrite\local;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class marker {
+    /**
+     * @var string Fillers and restart words that show a learner correcting themselves, in every language learned.
+     * Only words that are not ordinary words in another of the languages (so no "um", "no", "non" or "não").
+     */
+    public const HESITATIONS = 'äh|ähm|ehm|uh|uhm|erm|euh|hã|ich meine|i mean|je veux dire|quiero decir|o sea|'
+        . 'voglio dire|cioè|ik bedoel|quer dizer|nein|nee|sorry|pardon|perdón|scusa|desculpa';
+
     /** @var string[] Point statuses. */
     public const POINT_STATUS = ['covered', 'extended', 'short', 'missing', 'mismatch'];
 
@@ -111,16 +118,26 @@ final class marker {
                 'formality' => (string)$task->formality,
                 'targetWords' => (int)$task->targetwords,
             ],
-            'tips' => array_map(fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'tip' => $t['tip'],
-                'example' => $t['example'], 'level' => $t['source']], $merged['tips']),
-            'patterns' => tips::patterns(),
+            'tips' => array_map(
+                fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'tip' => $t['tip'],
+                'example' => $t['example'],
+                'level' => $t['source']],
+                $merged['tips']
+            ),
+            'patterns' => tips::patterns($instance->targetlang),
             'scoring' => ['criteria' => manager::CRITERIA, 'bands' => manager::BANDS, 'examScore' => true],
             'options' => ['markGood' => (bool)$instance->showgood],
             'answer' => ['text' => self::answer_text($sub)],
         ];
         if ($sub->attempt > 1) {
-            $previous = $DB->get_records('aispeakwrite_sub', ['taskid' => $sub->taskid, 'userid' => $sub->userid,
-                'status' => 'marked'], 'attempt DESC', 'id, content, kind', 0, 1);
+            $previous = $DB->get_records(
+                'aispeakwrite_sub',
+                ['taskid' => $sub->taskid, 'userid' => $sub->userid, 'status' => 'marked'],
+                'attempt DESC',
+                'id, content, kind',
+                0,
+                1
+            );
             if ($previous) {
                 $body['answer']['previousText'] = self::answer_text(reset($previous));
             }
@@ -165,9 +182,16 @@ final class marker {
 
         // The same text, marked before in the same mode with the same tips, gets the stored result at no charge.
         if ($sub->status !== 'pending') {
-            $same = $DB->get_records_select('aispeakwrite_sub', "taskid = :taskid AND userid = :userid AND status = 'marked'
-                AND contenthash = :hash AND id <> :id", ['taskid' => $sub->taskid, 'userid' => $sub->userid,
-                'hash' => $hash, 'id' => $sub->id], 'id DESC', '*', 0, 1);
+            $same = $DB->get_records_select(
+                'aispeakwrite_sub',
+                "taskid = :taskid AND userid = :userid AND status = 'marked'
+                AND contenthash = :hash AND id <> :id",
+                ['taskid' => $sub->taskid, 'userid' => $sub->userid, 'hash' => $hash, 'id' => $sub->id],
+                'id DESC',
+                '*',
+                0,
+                1
+            );
             if ($same) {
                 $same = reset($same);
                 if ($sub->attempt > $same->attempt) {
@@ -210,7 +234,7 @@ final class marker {
         $credits = is_array($data) && isset($data['creditsCharged']) && is_numeric($data['creditsCharged'])
             ? (int)$data['creditsCharged'] : 1;
         $feedback = is_array($data) && is_array($data['result'] ?? null)
-            ? self::normalise($data['result'], $text, $task, $merged['tips']) : null;
+            ? self::normalise($data['result'], $text, $task, $merged['tips'], $instance->targetlang) : null;
         operation::complete($op, $credits);
         if ($feedback === null) {
             $DB->set_field('aispeakwrite_sub', 'status', 'failed', ['id' => $sub->id]);
@@ -252,12 +276,14 @@ final class marker {
         if ($completion->is_enabled($cm) && !empty($instance->completionmarked)) {
             $completion->update_state($cm, COMPLETION_COMPLETE, (int)$sub->userid);
         }
-        \mod_aispeakwrite\event\submission_marked::create([
-            'objectid' => $sub->id,
-            'context' => $context,
-            'relateduserid' => $sub->userid,
-            'other' => ['taskid' => (int)$sub->taskid, 'attempt' => (int)$sub->attempt],
-        ])->trigger();
+        \mod_aispeakwrite\event\submission_marked::create(
+            [
+                'objectid' => $sub->id,
+                'context' => $context,
+                'relateduserid' => $sub->userid,
+                'other' => ['taskid' => (int)$sub->taskid, 'attempt' => (int)$sub->attempt],
+            ]
+        )->trigger();
     }
 
     /**
@@ -267,11 +293,12 @@ final class marker {
      * @param string $text the text that was marked
      * @param \stdClass $task
      * @param array $tips merged tips
+     * @param string|null $targetlang the language being learned: only its patterns may be cited (all when null)
      * @return array|null null when nothing usable came back
      */
-    public static function normalise(array $r, string $text, \stdClass $task, array $tips): ?array {
+    public static function normalise(array $r, string $text, \stdClass $task, array $tips, ?string $targetlang = null): ?array {
         $ruleids = array_column($tips, 'id');
-        foreach (tips::PATTERNS as $p) {
+        foreach ($targetlang === null ? tips::all_pattern_names() : tips::pattern_names($targetlang) as $p) {
             $ruleids[] = 'grammar:' . $p;
         }
         $rule = fn($id) => is_string($id) && in_array($id, $ruleids, true) ? $id : '';
@@ -423,7 +450,7 @@ final class marker {
             return false;
         }
         // A restart inside the marked words: what comes after the hesitation.
-        $parts = preg_split('/(?:…|\.\.\.|\s-\s|\b(?:äh|ähm|ehm|uh|um|ich meine|nein|sorry)\b)/iu', $mark['text']);
+        $parts = preg_split('/(?:…|\.\.\.|\s-\s|\b(?:' . self::HESITATIONS . ')\b)/iu', $mark['text']);
         if (count($parts) > 1 && str_contains(' ' . $norm(end($parts)) . ' ', ' ' . $correction . ' ')) {
             return true;
         }

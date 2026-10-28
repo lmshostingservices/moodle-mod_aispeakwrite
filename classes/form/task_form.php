@@ -66,21 +66,27 @@ class task_form extends \moodleform {
         $mform->addElement('textarea', 'situation', get_string('situation', $p), ['rows' => 3, 'cols' => 70]);
         $mform->setType('situation', PARAM_TEXT);
         $mform->addHelpButton('situation', 'situation', $p);
-        $mform->addElement('textarea', 'sourcetext', get_string(
-            $kind === 'speaking' ? 'sourcetext_speaking' : 'sourcetext',
-            $p
-        ), ['rows' => 8, 'cols' => 70]);
+        $mform->addElement(
+            'textarea',
+            'sourcetext',
+            get_string(
+                $kind === 'speaking' ? 'sourcetext_speaking' : 'sourcetext',
+                $p
+            ),
+            ['rows' => 8, 'cols' => 70]
+        );
         $mform->setType('sourcetext', PARAM_TEXT);
         $mform->addElement('textarea', 'points', get_string('points', $p), ['rows' => 5, 'cols' => 70]);
         $mform->setType('points', PARAM_TEXT);
         $mform->addHelpButton('points', 'points', $p);
 
         if ($kind === 'writing') {
-            $mform->addElement('select', 'formality', get_string('formality', $p), [
-                'du' => get_string('formality_du', $p),
-                'sie' => get_string('formality_sie', $p),
-                'any' => get_string('formality_any', $p),
-            ]);
+            $mform->addElement(
+                'select',
+                'formality',
+                get_string('formality', $p),
+                manager::formality_options($this->_customdata['targetlang'] ?? null)
+            );
             $mform->addElement('text', 'targetwords', get_string('targetwords', $p), ['size' => 5]);
             $mform->setType('targetwords', PARAM_INT);
             $mform->setDefault('targetwords', 150);
@@ -98,8 +104,12 @@ class task_form extends \moodleform {
         $mform->setDefault('timelimit', $kind === 'speaking' ? 5 : 30);
 
         $mform->addElement('header', 'tipshdr', get_string('tasktipshdr', $p));
-        $mform->addElement('textarea', 'tasktips', get_string('tasktips', $p), ['rows' => 5, 'cols' => 70,
-            'maxlength' => tips::MAXCHARS]);
+        $mform->addElement(
+            'textarea',
+            'tasktips',
+            get_string('tasktips', $p),
+            ['rows' => 5, 'cols' => 70, 'maxlength' => tips::MAXCHARS]
+        );
         $mform->setType('tasktips', PARAM_TEXT);
         $mform->addHelpButton('tasktips', 'tipsformat', $p);
         $mform->addElement('textarea', 'guide', get_string('guide', $p), ['rows' => 5, 'cols' => 70]);
@@ -126,8 +136,13 @@ class task_form extends \moodleform {
             $mform->addElement('hidden', 'groupid', 0);
         }
         $mform->setType('groupid', PARAM_INT);
-        $mform->addElement('autocomplete', 'userids', get_string('assignto', $p), $learners, ['multiple' => true,
-            'noselectionstring' => get_string('nobody', $p)]);
+        $mform->addElement(
+            'autocomplete',
+            'userids',
+            get_string('assignto', $p),
+            $learners,
+            ['multiple' => true, 'noselectionstring' => get_string('nobody', $p)]
+        );
         $mform->addHelpButton('userids', 'assignto', $p);
         $mform->addElement('date_time_selector', 'duedate', get_string('due', $p), ['optional' => true]);
         $mform->addElement('advcheckbox', 'visible', get_string('visibletolearners', $p));

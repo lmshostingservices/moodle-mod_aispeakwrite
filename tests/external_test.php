@@ -59,10 +59,19 @@ final class external_test extends \advanced_testcase {
         $sub = submissions::open_draft($instance, $task, (int)$u1->id);
 
         $this->setUser($u1);
-        $result = save_draft::execute($module->cmid, $sub->id, "Lieber Tim,\n<b>danke</b>", 'Plan');
+        // As the browser sends it: a typed "<" arrives with a space after it and is kept.
+        $result = save_draft::execute($module->cmid, $sub->id, "Lieber Tim,\ndanke, 3< 4", 'Plan');
         $result = \core_external\external_api::clean_returnvalue(save_draft::execute_returns(), $result);
-        $this->assertSame(3, $result['words']);
-        $this->assertSame("Lieber Tim,\ndanke", $DB->get_field('aispeakwrite_sub', 'content', ['id' => $sub->id]));
+        $this->assertSame(5, $result['words']);
+        $this->assertSame("Lieber Tim,\ndanke, 3< 4", $DB->get_field('aispeakwrite_sub', 'content', ['id' => $sub->id]));
+
+        // HTML is not accepted as plain text.
+        try {
+            save_draft::execute($module->cmid, $sub->id, '<b>danke</b>', '');
+            $this->fail('HTML was accepted');
+        } catch (\invalid_parameter_exception $e) {
+            $this->assertSame("Lieber Tim,\ndanke, 3< 4", $DB->get_field('aispeakwrite_sub', 'content', ['id' => $sub->id]));
+        }
 
         $this->setUser($u2);
         $this->expectException(\dml_missing_record_exception::class);
@@ -78,9 +87,11 @@ final class external_test extends \advanced_testcase {
         credentials::$central = fn() => null;
         set_config('lmslabssiteid', 's', 'mod_aispeakwrite');
         set_config('lmslabsapikey', 'k', 'mod_aispeakwrite');
-        remote::$transport = fn() => [200, json_encode(['creditsCharged' => 1, 'result' => [
-            'criteria' => ['task' => ['atg' => 15], 'communication' => ['atg' => 9], 'form' => ['atg' => 9]],
-        ]])];
+        remote::$transport = fn() => [200, json_encode(
+            ['creditsCharged' => 1, 'result' => [
+                'criteria' => ['task' => ['atg' => 15], 'communication' => ['atg' => 9], 'form' => ['atg' => 9]],
+            ]]
+        )];
         $course = $this->getDataGenerator()->create_course();
         $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
         $module = $this->getDataGenerator()->create_module('aispeakwrite', ['course' => $course->id]);
