@@ -3,6 +3,10 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.5 - 2026-10-29
+
+- Marked the plugin as a stable full release in Moodle. No functionality, settings, database schema or pricing changed.
+
 ## 1.0.4 - 2026-10-28
 
 Helps teachers check that a written answer is the learner's own work. Database upgrade: one activity setting and six
