@@ -16,6 +16,7 @@
 
 namespace mod_aispeakwrite\output;
 
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\memory;
 use mod_aispeakwrite\local\operation;
@@ -125,6 +126,12 @@ final class teacher {
             WHERE aispeakwriteid = ? AND status = 'marked' GROUP BY taskid",
             [$instance->id]
         );
+        $flagged = $DB->get_records_sql_menu(
+            "SELECT taskid, COUNT(1) FROM {aispeakwrite_sub}
+            WHERE aispeakwriteid = ? AND status = 'marked' AND kind = 'writing'
+            AND (rewriteflag = 1 OR pastecount > 0 OR pasteblocked > 0) GROUP BY taskid",
+            [$instance->id]
+        );
         $assigned = $DB->get_records_sql_menu(
             "SELECT tu.taskid, COUNT(1) FROM {aispeakwrite_taskuser} tu
             JOIN {aispeakwrite_task} t ON t.id = tu.taskid WHERE t.aispeakwriteid = ? GROUP BY tu.taskid",
@@ -150,6 +157,8 @@ final class teacher {
                 'assigned' => (int)($assigned[$task->id] ?? 0),
                 'due' => $task->duedate ? userdate($task->duedate, get_string('strftimedateshort', 'langconfig')) : '',
                 'answers' => (int)($counts[$task->id] ?? 0),
+                'flags' => (int)($flagged[$task->id] ?? 0),
+                'flagsurl' => self::url('analytics.php', ['id' => $cm->id]) . '#asw-integrity',
                 'hidden' => empty($task->visible),
                 'editurl' => (new \moodle_url('/mod/aispeakwrite/edittask.php', $taskparams))->out(false),
                 'testurl' => (new \moodle_url('/mod/aispeakwrite/testmark.php', $taskparams))->out(false),
@@ -354,6 +363,30 @@ final class teacher {
             }
             $grid[] = ['name' => fullname($user), 'cells' => $cells];
         }
+        // Writing integrity: drafts worth a look, teachers only.
+        $flags = [];
+        $tasktitles = [];
+        foreach ($writing as $s) {
+            if (!integrity::flagged($s) || !isset($users[(int)$s->userid])) {
+                continue;
+            }
+            if (!isset($tasktitles[$s->taskid])) {
+                $tasktitles[$s->taskid] = format_string((string)$DB->get_field('aispeakwrite_task', 'title', ['id' => $s->taskid]));
+            }
+            $flags[] = [
+                'name' => fullname($users[(int)$s->userid]),
+                'task' => $tasktitles[$s->taskid],
+                'draft' => get_string('draftn', self::P, (int)$s->attempt),
+                'reasons' => implode(' · ', integrity::reasons($instance, $s)),
+                'url' => self::url('feedback.php', ['id' => $cm->id, 'sub' => $s->id]),
+                'time' => (int)$s->timemarked,
+            ];
+        }
+        usort($flags, fn($a, $b) => $b['time'] <=> $a['time']);
+        $data['integrityflags'] = array_slice($flags, 0, 30);
+        $data['hasintegrityflags'] = !empty($flags);
+        $data['integrityflagcount'] = count($flags);
+
         $data['tipcols'] = array_map(fn($l) => ['label' => (string)($l)], array_values($tipkeys));
         $data['grid'] = $grid;
         $data['hasgrid'] = $grid && $tipkeys;

@@ -39,7 +39,7 @@ final class backup_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $module = $this->getDataGenerator()->create_module(
             'aispeakwrite',
-            ['course' => $course->id, 'activitytips' => 'Satzanfang: x', 'correctionmode' => 'explain']
+            ['course' => $course->id, 'activitytips' => 'Satzanfang: x', 'correctionmode' => 'explain', 'pastemode' => 'block']
         );
         $gen = $this->getDataGenerator()->get_plugin_generator('mod_aispeakwrite');
         $gen->create_task(['aispeakwriteid' => $module->id, 'title' => 'One']);
@@ -58,6 +58,7 @@ final class backup_test extends \advanced_testcase {
         $copy = $DB->get_record('aispeakwrite', ['id' => $newcm->instance]);
         $this->assertSame('Satzanfang: x', $copy->activitytips);
         $this->assertSame('explain', $copy->correctionmode);
+        $this->assertSame('block', $copy->pastemode);
         $titles = $DB->get_fieldset_select(
             'aispeakwrite_task',
             'title',
@@ -72,6 +73,67 @@ final class backup_test extends \advanced_testcase {
                 'tasktype',
                 ['aispeakwriteid' => $copy->id, 'title' => 'Two']
             )
+        );
+    }
+
+    /**
+     * A backup with user data keeps each draft's writing integrity figures.
+     */
+    public function test_backup_restore_integrity(): void {
+        global $CFG, $DB, $USER;
+        require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+        require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $CFG->backup_file_logger_level = \backup::LOG_NONE;
+        $course = $this->getDataGenerator()->create_course();
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $module = $this->getDataGenerator()->create_module('aispeakwrite', ['course' => $course->id, 'pastemode' => 'allow']);
+        $task = $this->getDataGenerator()->get_plugin_generator('mod_aispeakwrite')->create_task(
+            ['aispeakwriteid' => $module->id]
+        );
+        $instance = $DB->get_record('aispeakwrite', ['id' => $module->id]);
+        $sub = \mod_aispeakwrite\local\submissions::open_draft($instance, $task, (int)$user->id);
+        $DB->update_record('aispeakwrite_sub', (object)['id' => $sub->id, 'status' => 'marked', 'attempt' => 2,
+            'pastecount' => 4, 'pastechars' => 321, 'pasteblocked' => 1, 'tabswitches' => 7, 'rewritechanged' => 55,
+            'rewriteflag' => 1]);
+
+        $bc = new \backup_controller(
+            \backup::TYPE_1COURSE,
+            $course->id,
+            \backup::FORMAT_MOODLE,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id
+        );
+        $bc->get_plan()->get_setting('users')->set_value(true);
+        $bc->execute_plan();
+        $file = $bc->get_results()['backup_destination'];
+        $bc->destroy();
+        $dir = 'asw-integrity-' . time();
+        $file->extract_to_pathname(get_file_packer('application/vnd.moodle.backup'), make_backup_temp_directory($dir));
+
+        $newcourseid = \restore_dbops::create_new_course('Restored', 'R1', $course->category);
+        $rc = new \restore_controller(
+            $dir,
+            $newcourseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_GENERAL,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE
+        );
+        $rc->get_plan()->get_setting('users')->set_value(true);
+        $this->assertTrue($rc->execute_precheck());
+        $rc->execute_plan();
+        $rc->destroy();
+
+        $copy = $DB->get_record('aispeakwrite', ['course' => $newcourseid]);
+        $this->assertSame('allow', $copy->pastemode);
+        $restored = $DB->get_record('aispeakwrite_sub', ['aispeakwriteid' => $copy->id]);
+        $this->assertSame(
+            [4, 321, 1, 7, 55, 1],
+            [(int)$restored->pastecount, (int)$restored->pastechars, (int)$restored->pasteblocked,
+                (int)$restored->tabswitches, (int)$restored->rewritechanged, (int)$restored->rewriteflag]
         );
     }
 }

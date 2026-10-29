@@ -47,7 +47,7 @@ class backup_aispeakwrite_activity_structure_step extends backup_activity_struct
             [
                 'name', 'intro', 'introformat', 'correctionmode', 'showtelc', 'showgood', 'sendhistory', 'dailylimit',
                 'rewritelimit', 'activitytips', 'examlevel', 'targetlang', 'feedbacklang', 'examdate', 'grade',
-                'completionmarked',
+                'completionmarked', 'pastemode',
                 'timecreated',
             'timemodified']
         );
@@ -77,7 +77,8 @@ class backup_aispeakwrite_activity_structure_step extends backup_activity_struct
                 'tipsversion',
                 'timecreated',
                 'timemodified',
-            'timemarked']
+                'timemarked', 'pastecount', 'pastechars', 'pasteblocked', 'tabswitches', 'rewritechanged',
+            'rewriteflag']
         );
         $memories = new backup_nested_element('memories');
         $memory = new backup_nested_element(

@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\submissions;
 use mod_aispeakwrite\output\views;
@@ -62,7 +63,15 @@ if (!$sub) {
         );
     }
 } else {
-    $PAGE->requires->js_call_amd('mod_aispeakwrite/writer', 'init', [(int)$cm->id, (int)$sub->id]);
-    echo $OUTPUT->render_from_template('mod_aispeakwrite/writer', views::writer($instance, $cm, $task, $sub));
+    $PAGE->requires->js_call_amd(
+        'mod_aispeakwrite/writer',
+        'init',
+        [(int)$cm->id, (int)$sub->id, integrity::paste_mode($instance)]
+    );
+    $data = views::writer($instance, $cm, $task, $sub);
+    // Plagiarism plugins (Essay Guard) tell the learner what they record while they write.
+    require_once($CFG->libdir . '/plagiarismlib.php');
+    $data['disclosure'] = plagiarism_print_disclosure($cm->id);
+    echo $OUTPUT->render_from_template('mod_aispeakwrite/writer', $data);
 }
 echo $OUTPUT->footer();

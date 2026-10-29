@@ -3,6 +3,29 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.4 - 2026-10-28
+
+Helps teachers check that a written answer is the learner's own work. Database upgrade: one activity setting and six
+fields per draft.
+
+- **Pasting into answers**: a new activity setting to allow pasting, allow and log it (default), or block pasting
+  from outside the answer box. Cutting and pasting inside the box is always allowed. Each draft stores how many
+  pastes came from outside, how many characters, and how many were stopped. The writing screen tells learners what
+  is recorded.
+- **Leaving the writing screen** is counted per draft.
+- **Rewrite check**: on draft 2 and later, if more than 40% of the words outside the marked spots changed, the draft
+  is flagged to teachers. The threshold is a site setting (*Rewrite check threshold*).
+- **Writing integrity panel** for teachers on the feedback page, a list of flagged drafts in class analytics and a
+  flag count per task on the task list. Never shown to learners and never sent to LMS Labs.
+- **Plagiarism plugins**: the activity supports Moodle's plagiarism API. Disclosures appear on the writing screen,
+  plagiarism links in teacher views only, and a new event, *Written answer submitted*
+  (`\mod_aispeakwrite\event\answer_submitted`), fires when a written draft is marked. Works with Essay Guard 2.0.1:
+  one keystroke analysis per draft, the activity's phrase and special-character buttons are not counted as pastes,
+  and the private draft note is not monitored.
+- The answer box turns off spell check, autocorrect, autocomplete, autocapitalisation and page translation.
+- Backup and restore, the privacy export and the privacy metadata include the new fields. New strings in all 18
+  languages.
+
 ## 1.0.3 - 2026-10-28
 
 Fixes found by testing every language being learned end to end.

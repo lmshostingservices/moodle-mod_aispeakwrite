@@ -246,6 +246,7 @@ final class marker {
             );
         }
         $sub->status = 'marked';
+        integrity::check_rewrite($sub);
         $sub->feedback = json_encode($feedback, JSON_UNESCAPED_UNICODE);
         $sub->score = $feedback['score'];
         $sub->examscore = $feedback['examscore'];
@@ -284,6 +285,17 @@ final class marker {
                 'other' => ['taskid' => (int)$sub->taskid, 'attempt' => (int)$sub->attempt],
             ]
         )->trigger();
+        if ($sub->kind === 'writing') {
+            // For plagiarism plugins: a written answer is final once it is marked. They read the text from the database.
+            \mod_aispeakwrite\event\answer_submitted::create(
+                [
+                    'objectid' => $sub->id,
+                    'context' => $context,
+                    'relateduserid' => $sub->userid,
+                    'other' => ['taskid' => (int)$sub->taskid, 'attempt' => (int)$sub->attempt],
+                ]
+            )->trigger();
+        }
     }
 
     /**

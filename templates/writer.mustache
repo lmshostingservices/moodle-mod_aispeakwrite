@@ -29,7 +29,8 @@
         "hasgroups": true, "groups": [{"name": "Closing", "items": [{"text": "Liebe Grüße"}]}],
         "keys": [{"key": "ä"}], "markingsleft": "2 of 3 markings left today", "nomarkings": false,
         "hasguide": false, "guide": "", "backurl": "#", "lang": "de-DE",
-        "hassituation": false, "hassource": false, "haspoints": false, "targetwords": 150
+        "hassituation": false, "hassource": false, "haspoints": false, "targetwords": 150,
+        "pastenotice": "Your teacher can see how often you paste text from outside the answer box.", "disclosure": ""
     }
 }}
 <div class="asw" id="asw-writer-{{subid}}" data-cmid="{{cmid}}" data-subid="{{subid}}">
@@ -57,7 +58,7 @@
                 <label for="asw-answer-{{subid}}" style="font-weight: 600; margin: 0;">{{#str}}youranswer, mod_aispeakwrite{{/str}}</label>
                 <span class="asw-sub"><strong class="asw-num" data-region="words">{{words}}</strong> {{#targetwords}}/ ~{{targetwords}}{{/targetwords}} {{#str}}words, mod_aispeakwrite{{/str}}</span>
             </div>
-            <textarea class="asw-editor" id="asw-answer-{{subid}}" data-region="answer" lang="{{lang}}" spellcheck="false" {{#pending}}readonly{{/pending}}>{{content}}</textarea>
+            <textarea class="asw-editor" id="asw-answer-{{subid}}" data-region="answer" lang="{{lang}}" spellcheck="false" translate="no" autocomplete="off" autocorrect="off" autocapitalize="off" {{#pending}}readonly{{/pending}}>{{content}}</textarea>
             {{#haskeys}}
             <div class="asw-card__foot" style="justify-content: flex-start;">
                 <div class="asw-row" style="gap: 6px;" role="group" aria-label="{{#str}}specialcharacters, mod_aispeakwrite{{/str}}">
@@ -112,11 +113,14 @@
 
             <section class="asw-card">
                 <label class="asw-label" for="asw-notes-{{subid}}">{{#str}}draftnote, mod_aispeakwrite{{/str}}</label>
-                <textarea class="asw-notes" id="asw-notes-{{subid}}" data-region="notes" placeholder="{{#str}}draftnote_placeholder, mod_aispeakwrite{{/str}}">{{notes}}</textarea>
+                <textarea class="asw-notes" id="asw-notes-{{subid}}" data-region="notes" data-essayguard="off" placeholder="{{#str}}draftnote_placeholder, mod_aispeakwrite{{/str}}">{{notes}}</textarea>
             </section>
         </aside>
     </div>
 
+    {{#pastenotice}}<div class="asw-sub" data-region="pastenotice">{{pastenotice}}</div>{{/pastenotice}}
+    <div class="asw-sub" data-region="pasteblocked" role="status" aria-live="polite"></div>
+    {{#disclosure}}<div class="asw-card asw-disclosure">{{{disclosure}}}</div>{{/disclosure}}
     <div class="asw-card asw-submitbar">
         <span style="flex: 1 1 280px;">{{modeexplain}}</span>
         {{#markingsleft}}<span class="asw-sub">{{markingsleft}}</span>{{/markingsleft}}

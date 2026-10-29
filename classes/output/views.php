@@ -16,6 +16,7 @@
 
 namespace mod_aispeakwrite\output;
 
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\memory;
 use mod_aispeakwrite\local\marker;
@@ -523,6 +524,7 @@ final class views {
                 ],
                 'backurl' => (new \moodle_url('/mod/aispeakwrite/practice.php', ['id' => $cm->id]))->out(false),
                 'lang' => $instance->targetlang,
+                'pastenotice' => get_string('pastenotice_' . integrity::paste_mode($instance), self::P),
             ]
         );
     }

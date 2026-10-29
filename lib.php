@@ -43,6 +43,7 @@ function aispeakwrite_supports($feature) {
         case FEATURE_COMPLETION_HAS_RULES:
         case FEATURE_GRADE_HAS_GRADE:
         case FEATURE_BACKUP_MOODLE2:
+        case FEATURE_PLAGIARISM:
             return true;
         case FEATURE_GRADE_OUTCOMES:
             return false;

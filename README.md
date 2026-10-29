@@ -76,6 +76,28 @@ Writing works in every browser.
 - **Class analytics**: most common mistakes, which learners keep missing each one, assign practice to them in one
   step, a learners × tips grid, and credit usage with a low-balance warning.
 
+## Writing integrity
+
+Teachers only. Learners never see these figures, and none of them are sent to LMS Labs.
+
+- **Pasting into answers** (per activity): *allow*, *allow and log* (default) or *block pasting from outside the
+  box*. Cutting and pasting inside the answer box is always allowed. With logging, each draft keeps how many times
+  text was pasted in from elsewhere and how many characters; with blocking, how many tries were stopped. The
+  writing screen tells learners what is recorded.
+- **Leaving the writing screen**: each draft counts how many times the learner switched to another tab, window or app.
+- **Rewrite check**: on draft 2 and later, the rewrite is compared word by word with the marked draft it started
+  from. Changes at or next to the marked spots are ignored; when more than 40% of the other words changed (a site
+  setting), the draft is flagged.
+- **Where teachers see it**: a *Writing integrity* panel on the feedback page when a teacher opens a learner's
+  answer, a list of flagged drafts in class analytics, and a flag count per task on the task list.
+- **Essay Guard**: when the Essay Guard plagiarism plugin (2.0.1 or later) is installed and switched on for the
+  activity, it records how each answer is typed on the writing screen and its badge appears in the panel, one score
+  per draft. The plugin declares `FEATURE_PLAGIARISM`, shows plagiarism disclosures on the writing screen and fires
+  `\mod_aispeakwrite\event\answer_submitted` when a written answer is marked.
+- The answer box turns off the browser's spell check, autocorrect, autocomplete and page translation.
+
+These are signals for a conversation with the learner, not proof.
+
 ## Grades and completion
 
 The grade is the average of each learner's best strict score per task. Completion can require a number of tasks to
@@ -83,7 +105,8 @@ be marked.
 
 ## Privacy
 
-Stored: drafts and marked answers (with feedback and scores), each learner's focus-area record, assignments, and a
+Stored: drafts and marked answers (with feedback and scores, and per draft the paste, stopped-paste and
+screen-leaving counts and the rewrite check result), each learner's focus-area record, assignments, and a
 record of each paid request (its body is kept only while it is being sent, then emptied; requests still pending after
 seven days are ended by a scheduled task).
 

@@ -36,6 +36,9 @@ const safeText = (text) => text.replace(/<(?=\S|$)/g, '< ');
 /**
  * Inserts text at the cursor of a text box.
  *
+ * The insertion is marked as coming from the screen's own buttons (phrases, special characters), so a typing
+ * monitor such as Essay Guard does not read it as pasted text.
+ *
  * @param {HTMLTextAreaElement} box
  * @param {string} text
  */
@@ -51,16 +54,45 @@ const insert = (box, text) => {
     const pos = start + add.length;
     box.focus();
     box.setSelectionRange(pos, pos);
-    box.dispatchEvent(new Event('input', {bubbles: true}));
+    box.dataset.essayguardBenign = 'ui';
+    try {
+        box.dispatchEvent(new InputEvent('input', {bubbles: true, inputType: 'insertReplacementText', data: add}));
+    } finally {
+        delete box.dataset.essayguardBenign;
+    }
 };
+
+/**
+ * Line endings differ between what was copied and what the clipboard gives back.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+const norm = (text) => (text || '').replace(/\r\n?/g, '\n');
+
+/**
+ * When a typing monitor (Essay Guard) runs on the page, lets it send what it has recorded before the answer is
+ * submitted, so it scores the whole writing session. Waits five seconds at most.
+ *
+ * @returns {Promise}
+ */
+const drainMonitor = () => new Promise((resolve) => {
+    if (document.documentElement.dataset.essayguardActive !== '1') {
+        resolve();
+        return;
+    }
+    window.setTimeout(resolve, 5000);
+    document.dispatchEvent(new CustomEvent('essayguard:drain', {detail: {done: resolve}}));
+});
 
 /**
  * Sets up the writing screen.
  *
  * @param {number} cmid
  * @param {number} subid
+ * @param {string} pastemode allow, log or block: pasting from outside the answer box
  */
-export const init = (cmid, subid) => {
+export const init = (cmid, subid, pastemode = 'log') => {
     const root = document.getElementById('asw-writer-' + subid);
     if (!root) {
         return;
@@ -73,10 +105,26 @@ export const init = (cmid, subid) => {
     const submit = root.querySelector('[data-action="submit"]');
     const elapsed = root.querySelector('[data-region="elapsed"]');
     const phases = root.querySelectorAll('[data-region="phases"] [data-phase]');
+    const blockednote = root.querySelector('[data-region="pasteblocked"]');
     let target = answer;
     let timer = null;
     let dirty = false;
     let busy = false;
+
+    // Writing integrity counts since the last save. Sent with the next save and added up on the server.
+    const counts = {pastes: 0, pastechars: 0, pasteblocked: 0, tabswitches: 0};
+    const take = () => {
+        const sent = Object.assign({}, counts);
+        Object.keys(counts).forEach((k) => {
+            counts[k] = 0;
+        });
+        return sent;
+    };
+    const giveback = (sent) => {
+        Object.keys(counts).forEach((k) => {
+            counts[k] += sent[k];
+        });
+    };
 
     const count = () => {
         const t = answer.value.trim();
@@ -88,14 +136,16 @@ export const init = (cmid, subid) => {
             return;
         }
         dirty = false;
+        const sent = take();
         try {
-            await Ajax.call([{methodname: 'mod_aispeakwrite_save_draft', args: {
+            await Ajax.call([{methodname: 'mod_aispeakwrite_save_draft', args: Object.assign({
                 cmid: cmid, subid: subid, content: safeText(answer.value), notes: safeText(notes ? notes.value : ''),
-            }}])[0];
+            }, sent)}])[0];
             if (saved) {
                 saved.textContent = await getString('draftsaved', 'mod_aispeakwrite');
             }
         } catch (e) {
+            giveback(sent);
             dirty = true;
         }
     };
@@ -121,8 +171,109 @@ export const init = (cmid, subid) => {
     }
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
+            // eslint-disable-next-line no-use-before-define
+            leave();
             save();
         }
+    });
+
+    // Pasting. Text cut or copied inside the answer box and pasted back is always allowed and never counted.
+    // Pastes from anywhere else follow the activity's setting. Listening in the capture phase on the document
+    // means a blocked paste is stopped before any other script, such as Essay Guard, sees it.
+    let internal = null;
+    let dragging = false;
+    let lastpaste = 0;
+    const remember = () => {
+        internal = norm(answer.value.slice(answer.selectionStart, answer.selectionEnd));
+    };
+    answer.addEventListener('copy', remember);
+    answer.addEventListener('cut', remember);
+    answer.addEventListener('dragstart', () => {
+        dragging = true;
+    });
+    answer.addEventListener('dragend', () => {
+        dragging = false;
+    });
+
+    const benign = () => {
+        answer.dataset.essayguardBenign = 'internal';
+        window.setTimeout(() => {
+            delete answer.dataset.essayguardBenign;
+        }, 0);
+    };
+    const outside = async(e, length) => {
+        if (pastemode === 'block') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            counts.pasteblocked++;
+            schedule();
+            if (blockednote) {
+                blockednote.textContent = await getString('pasteblockedmsg', 'mod_aispeakwrite');
+            }
+            return;
+        }
+        if (pastemode === 'log') {
+            counts.pastes++;
+            counts.pastechars += length;
+            schedule();
+        }
+    };
+
+    document.addEventListener('paste', (e) => {
+        if (e.target !== answer || answer.readOnly) {
+            return;
+        }
+        lastpaste = Date.now();
+        const cd = e.clipboardData || window.clipboardData;
+        const text = norm(cd ? cd.getData('text/plain') || cd.getData('text') : '');
+        if (text === '') {
+            return;
+        }
+        if (internal !== null && text === internal) {
+            benign();
+            return;
+        }
+        outside(e, text.length);
+    }, true);
+
+    document.addEventListener('drop', (e) => {
+        if (e.target !== answer || answer.readOnly) {
+            return;
+        }
+        lastpaste = Date.now();
+        if (dragging) {
+            benign();
+            return;
+        }
+        const text = norm(e.dataTransfer ? e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text') : '');
+        if (text !== '') {
+            outside(e, text.length);
+        }
+    }, true);
+
+    // Some keyboards (phone clipboard suggestions) paste without a paste event.
+    answer.addEventListener('beforeinput', (e) => {
+        if ((e.inputType !== 'insertFromPaste' && e.inputType !== 'insertFromDrop') || Date.now() - lastpaste < 200) {
+            return;
+        }
+        if (answer.dataset.essayguardBenign) {
+            return;
+        }
+        outside(e, (e.data || '').length);
+    });
+
+    // Leaving the writing screen: another tab, another window or another app. Counted once per time away.
+    let away = false;
+    const leave = () => {
+        if (!away && !answer.readOnly) {
+            away = true;
+            counts.tabswitches++;
+            schedule();
+        }
+    };
+    window.addEventListener('blur', leave);
+    window.addEventListener('focus', () => {
+        away = false;
     });
 
     root.addEventListener('click', (e) => {
@@ -160,10 +311,12 @@ export const init = (cmid, subid) => {
             window.clearTimeout(timer);
             submit.disabled = true;
             status.textContent = await getString('marking', 'mod_aispeakwrite');
+            await drainMonitor();
+            const sent = take();
             try {
-                const result = await Ajax.call([{methodname: 'mod_aispeakwrite_submit', args: {
+                const result = await Ajax.call([{methodname: 'mod_aispeakwrite_submit', args: Object.assign({
                     cmid: cmid, subid: subid, content: safeText(answer.value), notes: safeText(notes ? notes.value : ''),
-                }}])[0];
+                }, sent)}])[0];
                 if (result.ok) {
                     window.location.href = result.url;
                     return;
@@ -174,6 +327,7 @@ export const init = (cmid, subid) => {
                     submit.textContent = await getString('checkagain', 'mod_aispeakwrite');
                 }
             } catch (e) {
+                giveback(sent);
                 status.textContent = e.message || await getString('marknetworkerror', 'mod_aispeakwrite');
             }
             submit.disabled = false;

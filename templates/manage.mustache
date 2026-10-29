@@ -23,7 +23,7 @@
     {
         "cmid": 3, "onmanage": true, "hastasks": true,
         "tasks": [{"title": "Geburtstagsfeier", "kind": "Writing", "speaking": false, "type": "Email", "topic": "Feste",
-            "audience": "Whole class", "assigned": 0, "due": "30 Oct", "answers": 12, "hidden": false, "editurl": "#",
+            "audience": "Whole class", "assigned": 0, "due": "30 Oct", "answers": 12, "flags": 1, "flagsurl": "#", "hidden": false, "editurl": "#",
             "testurl": "#", "toggleurl": "#", "toggle": "Hide", "deleteurl": "#", "upurl": "", "downurl": "#"}],
         "addwritingurl": "#", "addspeakingurl": "#", "analyticsurl": "#",
         "hasbalance": true, "balance": "4,820", "lowcredits": false, "usedmonth": 312, "markings": 212, "partnerturns": 90
@@ -66,7 +66,7 @@
                         <td><span class="asw-pill {{#speaking}}asw-pill--warn{{/speaking}}{{^speaking}}asw-pill--blue{{/speaking}}">{{kind}}</span> <span class="asw-sub">{{type}}</span></td>
                         <td>{{audience}}{{#assigned}}<br><span class="asw-sub">{{#str}}assignedcount, mod_aispeakwrite, {{assigned}}{{/str}}</span>{{/assigned}}</td>
                         <td class="asw-num">{{due}}</td>
-                        <td class="asw-num">{{answers}}</td>
+                        <td class="asw-num">{{answers}}{{#flags}} <a class="asw-flag" href="{{flagsurl}}" data-region="taskflags" title="{{#str}}integrity_flags, mod_aispeakwrite{{/str}}"><span aria-hidden="true">⚑</span> {{#str}}integrity_flagcount, mod_aispeakwrite, {{flags}}{{/str}}</a>{{/flags}}</td>
                         <td>
                             <div class="asw-actions">
                                 <a class="asw-btn asw-btn--line" href="{{editurl}}" style="min-height: 36px;">{{#str}}edit{{/str}}</a>

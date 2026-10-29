@@ -55,6 +55,11 @@ class provider implements
                 'feedback' => 'privacy:metadata:aispeakwrite_sub:feedback',
                 'score' => 'privacy:metadata:aispeakwrite_sub:score',
                 'timecreated' => 'privacy:metadata:aispeakwrite_sub:timecreated',
+                'pastecount' => 'privacy:metadata:aispeakwrite_sub:pastecount',
+                'pastechars' => 'privacy:metadata:aispeakwrite_sub:pastechars',
+                'pasteblocked' => 'privacy:metadata:aispeakwrite_sub:pasteblocked',
+                'tabswitches' => 'privacy:metadata:aispeakwrite_sub:tabswitches',
+                'rewritechanged' => 'privacy:metadata:aispeakwrite_sub:rewritechanged',
             ],
             'privacy:metadata:aispeakwrite_sub'
         );
@@ -200,6 +205,12 @@ class provider implements
                     'examscore' => $s->examscore,
                     'timecreated' => transform::datetime($s->timecreated),
                     'timemarked' => $s->timemarked ? transform::datetime($s->timemarked) : '',
+                    'pastesfromoutside' => (int)$s->pastecount,
+                    'pastedcharacters' => (int)$s->pastechars,
+                    'pastesstopped' => (int)$s->pasteblocked,
+                    'timesleftscreen' => (int)$s->tabswitches,
+                    'rewritechangedpercent' => $s->rewritechanged === null ? '' : (int)$s->rewritechanged,
+                    'rewriteflagged' => transform::yesno(!empty($s->rewriteflag)),
                 ];
             }
             $memory = [];

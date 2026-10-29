@@ -24,6 +24,7 @@
 
 require(__DIR__ . '/../../config.php');
 
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\submissions;
 use mod_aispeakwrite\output\views;
@@ -72,5 +73,9 @@ if (!$own) {
 }
 $data = views::feedback($instance, $cm, $task, $sub, $own);
 $data['subid'] = $sub->id;
+// Writing integrity is for teachers only: never shown to the learner, never sent to LMS Labs.
+if (!$own && has_capability('mod/aispeakwrite:viewreports', $context)) {
+    $data['integrity'] = integrity::panel($instance, $cm, $sub);
+}
 echo $OUTPUT->render_from_template('mod_aispeakwrite/feedback', $data);
 echo $OUTPUT->footer();

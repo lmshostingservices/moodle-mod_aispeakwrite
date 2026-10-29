@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\tips;
 
@@ -103,6 +104,11 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         $mform->setType('rewritelimit', PARAM_INT);
         $mform->setDefault('rewritelimit', 2);
         $mform->addHelpButton('rewritelimit', 'rewritelimit', $p);
+
+        $mform->addElement('header', 'integrityhdr', get_string('integrity', $p));
+        $mform->addElement('select', 'pastemode', get_string('pastemode', $p), integrity::paste_modes());
+        $mform->setDefault('pastemode', integrity::default_paste_mode());
+        $mform->addHelpButton('pastemode', 'pastemode', $p);
 
         $this->standard_grading_coursemodule_elements();
         $this->standard_coursemodule_elements();

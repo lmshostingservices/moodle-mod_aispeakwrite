@@ -104,6 +104,31 @@ if ($ADMIN->fulltree) {
         )
     );
     $settings->add(
+        new admin_setting_heading(
+            'mod_aispeakwrite/integrityheading',
+            get_string('integrity', $p),
+            get_string('integrity_desc', $p)
+        )
+    );
+    $settings->add(
+        new admin_setting_configselect(
+            'mod_aispeakwrite/defaultpastemode',
+            get_string('pastemode', $p),
+            get_string('pastemode_help', $p),
+            'log',
+            \mod_aispeakwrite\local\integrity::paste_modes()
+        )
+    );
+    $settings->add(
+        new admin_setting_configtext(
+            'mod_aispeakwrite/rewritethreshold',
+            get_string('rewritethreshold', $p),
+            get_string('rewritethreshold_desc', $p),
+            40,
+            PARAM_INT
+        )
+    );
+    $settings->add(
         new admin_setting_configtext(
             'mod_aispeakwrite/lowcredits',
             get_string('lowcredits', $p),

@@ -1308,3 +1308,30 @@
         display: none;
     }
 }
+
+/* Writing integrity (teachers only). */
+.asw .asw-integrity {
+    border-left: 4px solid var(--asw-line, #e2e8f0);
+}
+.asw .asw-integrity__list {
+    margin: 0;
+    padding-left: 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.asw .asw-integrity__warn {
+    font-weight: 600;
+    color: var(--asw-warn, #b45309);
+}
+.asw .asw-integrity__links:empty {
+    display: none;
+}
+.asw .asw-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--asw-warn, #b45309);
+}

@@ -130,6 +130,8 @@ final class manager {
         $data->feedbacklang = preg_match('/^[a-z]{2,3}(_[a-z]{2,4})?$/', (string)($data->feedbacklang ?? ''))
             ? $data->feedbacklang : '';
         $data->examdate = (int)($data->examdate ?? 0);
+        $data->pastemode = array_key_exists((string)($data->pastemode ?? ''), integrity::paste_modes())
+            ? $data->pastemode : integrity::default_paste_mode();
         if (isset($data->completionmarked)) {
             // Left unset when completion is locked, so the stored value is kept.
             $data->completionmarked = max(0, (int)$data->completionmarked);

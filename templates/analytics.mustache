@@ -111,5 +111,28 @@
         <span class="asw-sub">{{#str}}heatlegend, mod_aispeakwrite{{/str}}</span>
     </section>
     {{/hasgrid}}
+
+    <section class="asw-card" id="asw-integrity" data-region="integrityflags">
+        <div class="asw-row asw-row--between" style="align-items: center;">
+            <h3 class="asw-h2">{{#str}}integrity_flags, mod_aispeakwrite{{/str}}</h3>
+            {{#hasintegrityflags}}<span class="asw-pill asw-pill--warn">{{integrityflagcount}}</span>{{/hasintegrityflags}}
+        </div>
+        {{#hasintegrityflags}}
+        <div class="asw-scroll">
+            <table class="asw-table">
+                <thead><tr>
+                    <th scope="col">{{#str}}learner, mod_aispeakwrite{{/str}}</th>
+                    <th scope="col">{{#str}}integrity_task, mod_aispeakwrite{{/str}}</th>
+                    <th scope="col">{{#str}}integrity_why, mod_aispeakwrite{{/str}}</th>
+                </tr></thead>
+                <tbody>
+                    {{#integrityflags}}<tr><th scope="row"><a href="{{url}}">{{name}}</a></th><td>{{task}} · {{draft}}</td><td>{{reasons}}</td></tr>{{/integrityflags}}
+                </tbody>
+            </table>
+        </div>
+        {{/hasintegrityflags}}
+        {{^hasintegrityflags}}<span class="asw-sub">{{#str}}integrity_none, mod_aispeakwrite{{/str}}</span>{{/hasintegrityflags}}
+        <span class="asw-sub">{{#str}}integrity_note, mod_aispeakwrite{{/str}}</span>
+    </section>
     {{> mod_aispeakwrite/usage }}
 </div>

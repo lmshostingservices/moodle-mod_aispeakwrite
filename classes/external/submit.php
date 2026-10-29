@@ -19,6 +19,7 @@ namespace mod_aispeakwrite\external;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\marker;
 use mod_aispeakwrite\local\submissions;
 
@@ -43,6 +44,20 @@ class submit extends base {
                 // Plain text. The browser adds a space after any "<" that could start a tag, so nothing typed is lost.
                 'content' => new external_value(PARAM_TEXT, 'Text as typed'),
                 'notes' => new external_value(PARAM_TEXT, 'Draft note', VALUE_DEFAULT, ''),
+                'pastes' => new external_value(
+                    PARAM_INT,
+                    'Pastes from outside the answer box since the last save',
+                    VALUE_DEFAULT,
+                    0
+                ),
+                'pastechars' => new external_value(PARAM_INT, 'Characters in those pastes', VALUE_DEFAULT, 0),
+                'pasteblocked' => new external_value(PARAM_INT, 'Pastes stopped since the last save', VALUE_DEFAULT, 0),
+                'tabswitches' => new external_value(
+                    PARAM_INT,
+                    'Times the learner left the screen since the last save',
+                    VALUE_DEFAULT,
+                    0
+                ),
             ]
         );
     }
@@ -54,17 +69,39 @@ class submit extends base {
      * @param int $subid
      * @param string $content
      * @param string $notes
+     * @param int $pastes
+     * @param int $pastechars
+     * @param int $pasteblocked
+     * @param int $tabswitches
      * @return array
      */
-    public static function execute(int $cmid, int $subid, string $content, string $notes = ''): array {
+    public static function execute(
+        int $cmid,
+        int $subid,
+        string $content,
+        string $notes = '',
+        int $pastes = 0,
+        int $pastechars = 0,
+        int $pasteblocked = 0,
+        int $tabswitches = 0
+    ): array {
         $params = self::validate_parameters(
             self::execute_parameters(),
-            ['cmid' => $cmid, 'subid' => $subid, 'content' => $content, 'notes' => $notes]
+            ['cmid' => $cmid, 'subid' => $subid, 'content' => $content, 'notes' => $notes, 'pastes' => $pastes,
+                'pastechars' => $pastechars, 'pasteblocked' => $pasteblocked, 'tabswitches' => $tabswitches]
         );
         [$cm, $context, $instance, $task, $sub] = self::load($params['cmid'], $params['subid']);
         if ($task->kind !== 'writing') {
             throw new \moodle_exception('wrongkind', 'mod_aispeakwrite');
         }
+        integrity::add_counts(
+            $instance,
+            $sub,
+            $params['pastes'],
+            $params['pastechars'],
+            $params['pasteblocked'],
+            $params['tabswitches']
+        );
         try {
             if ($sub->status !== 'pending') {
                 submissions::save($sub, $params['content'], $params['notes']);

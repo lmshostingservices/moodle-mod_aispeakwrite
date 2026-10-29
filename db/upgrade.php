@@ -29,5 +29,33 @@
  * @return bool
  */
 function xmldb_aispeakwrite_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2026102900) {
+        // Writing integrity: the paste setting on the activity, and per-draft counts.
+        $table = new xmldb_table('aispeakwrite');
+        $field = new xmldb_field('pastemode', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, 'log', 'completionmarked');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('aispeakwrite_sub');
+        $fields = [
+            new xmldb_field('pastecount', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timemarked'),
+            new xmldb_field('pastechars', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'pastecount'),
+            new xmldb_field('pasteblocked', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'pastechars'),
+            new xmldb_field('tabswitches', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'pasteblocked'),
+            new xmldb_field('rewritechanged', XMLDB_TYPE_INTEGER, '3', null, null, null, null, 'tabswitches'),
+            new xmldb_field('rewriteflag', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'rewritechanged'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2026102900, 'aispeakwrite');
+    }
+
     return true;
 }

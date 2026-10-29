@@ -55,6 +55,20 @@
         <span class="asw-pill {{#think}}asw-pill--warn{{/think}}{{#explain}}asw-pill--blue{{/explain}}">{{modelabel}}</span>
     </div>
 
+    {{#integrity}}
+    <section class="asw-card asw-integrity" data-region="integrity" aria-label="{{#str}}integrity, mod_aispeakwrite{{/str}}">
+        <div class="asw-row asw-row--between" style="align-items: center;">
+            <span class="asw-label">{{#str}}integrity, mod_aispeakwrite{{/str}}</span>
+            {{#flagged}}<span class="asw-pill asw-pill--warn" data-region="integrityflag">{{#str}}integrity_flagged, mod_aispeakwrite{{/str}}</span>{{/flagged}}
+        </div>
+        <ul class="asw-integrity__list">
+            {{#rows}}<li{{#warn}} class="asw-integrity__warn"{{/warn}}>{{text}}</li>{{/rows}}
+        </ul>
+        {{#hasplagiarism}}<div class="asw-integrity__links" data-region="plagiarism">{{{plagiarism}}}</div>{{/hasplagiarism}}
+        <span class="asw-sub">{{#str}}integrity_note, mod_aispeakwrite{{/str}}</span>
+    </section>
+    {{/integrity}}
+
     {{#speaking}}
     <section class="asw-card" style="flex-direction: row; flex-wrap: wrap; align-items: center; gap: 24px;">
         <span class="asw-tile" style="width: 64px; height: 64px; border-radius: 20px; {{#understood}}background: var(--asw-good-soft); color: var(--asw-good);{{/understood}}{{#notunderstood}}background: var(--asw-warn-soft); color: var(--asw-warn);{{/notunderstood}}" aria-hidden="true">

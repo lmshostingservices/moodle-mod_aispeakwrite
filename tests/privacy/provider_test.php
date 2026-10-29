@@ -110,6 +110,9 @@ final class provider_test extends \core_privacy\tests\provider_testcase {
         $this->export_context_data_for_user($u1->id, $context, 'mod_aispeakwrite');
         $data = writer::with_context($context)->get_data([get_string('pluginname', 'mod_aispeakwrite')]);
         $this->assertSame('Hallo Tim', $data->answers[0]['answer']);
+        $this->assertArrayHasKey('pastesfromoutside', $data->answers[0]);
+        $this->assertArrayHasKey('timesleftscreen', $data->answers[0]);
+        $this->assertArrayHasKey('rewritechangedpercent', $data->answers[0]);
         $this->assertCount(1, $data->focusareas);
 
         provider::delete_data_for_user(new approved_contextlist($u1, 'mod_aispeakwrite', [$context->id]));
