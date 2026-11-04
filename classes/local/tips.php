@@ -19,9 +19,9 @@ namespace mod_aispeakwrite\local;
 /**
  * The school's own tips and tricks, and the grammar patterns for each language being learned.
  *
- * Tips are entered one per line as "Name: tip | example" at three levels (school, activity, task). They are merged, the
- * most specific level winning when two tips share a name. Each tip gets a stable id ("tip:satzanfang") that the AI
- * must use to cite it; any other id the AI returns is dropped.
+ * Tips are entered one per line as "Name: tip | example" at four levels (school, school for a CEFR level, activity, task).
+ * They are merged, the most specific level winning when two tips share a name. Each tip gets a stable id
+ * ("tip:satzanfang") that the AI must use to cite it; any other id the AI returns is dropped.
  *
  * @package    mod_aispeakwrite
  * @copyright  2026 LMS Hosting Services
@@ -29,7 +29,7 @@ namespace mod_aispeakwrite\local;
  */
 final class tips {
     /** @var int Maximum characters per tips box. */
-    public const MAXCHARS = 4000;
+    public const MAXCHARS = 10000;
 
     /** @var int Maximum number of tips sent with a request. */
     public const MAXTIPS = 80;
@@ -107,7 +107,7 @@ final class tips {
             $out[] = [
                 'id' => 'tip:' . self::slug($name),
                 'name' => \core_text::substr($name, 0, 40),
-                'tip' => \core_text::substr($tip, 0, 400),
+                'tip' => \core_text::substr($tip, 0, 600),
                 'example' => isset($parts[1]) ? \core_text::substr(trim($parts[1]), 0, 200) : '',
                 'source' => $source,
             ];
@@ -132,7 +132,21 @@ final class tips {
     }
 
     /**
-     * The school, activity and task tips merged, most specific first wins.
+     * The school's tips for one CEFR level (site setting), or '' when the level has none.
+     *
+     * @param string|null $level A1 … C2, or a level saved before 1.0.6 such as "telc B1"
+     * @return string
+     */
+    public static function level_tips(?string $level): string {
+        if (!preg_match('/(?<![A-Z0-9])([ABC][12])(?![0-9])/', strtoupper((string)$level), $m)) {
+            return '';
+        }
+        $level = $m[1];
+        return (string)get_config('mod_aispeakwrite', 'leveltips' . strtolower($level));
+    }
+
+    /**
+     * The school, level, activity and task tips merged, most specific first wins.
      *
      * @param \stdClass $instance activity record
      * @param \stdClass|null $task
@@ -142,6 +156,7 @@ final class tips {
         $levels = [
             self::parse($task->tasktips ?? '', 'task'),
             self::parse($instance->activitytips ?? '', 'activity'),
+            self::parse(self::level_tips($instance->examlevel ?? null), 'level'),
             self::parse((string)get_config('mod_aispeakwrite', 'schooltips'), 'school'),
         ];
         $byid = [];

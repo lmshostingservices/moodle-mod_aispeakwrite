@@ -3,6 +3,31 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.6 - 2026-11-04
+
+Changes requested by Advent Training Group after testing. Database upgrade: three activity settings and one field per
+task.
+
+- **Points for each criterion**: a new activity section, *Points for each criterion*, sets how many points Content,
+  Communication and Form are each worth (15 each by default, 1–100). The AI still marks on the four telc bands; each
+  band becomes the activity's own points (for 20 points: 0, 4, 12, 20). Feedback shows each criterion as "points / max",
+  and the gradebook gets the share of the total. New activities default to a maximum grade of 45.
+- **Tips for each level**: the *Level* setting is now a list (A1–C2), and the site settings have a tips box for each
+  level. An activity uses the school's tips, its level's tips, its own tips and the task's tips; the most specific tip
+  wins when two have the same name.
+- **Longer tips**: every tips box now takes up to 10,000 characters (was 4,000), and a single tip up to 600.
+- **Marking instructions** for each task: a teacher-only box under *Task points*, sent with every marking of that task
+  so the AI marks exactly as the school wants (for example "give point 3 only for at least two suggestions"). Task
+  points still accept "| 2" for "at least two".
+- **Writing screen**: the task points now sit beside the answer box (above it on phones), the task card no longer has
+  an empty column, and *Check before you submit* moved under the answer box as a two-column list that can be folded.
+- **Essay Guard**: its long monitoring notice is now behind a "How this activity is monitored" link on the writing
+  screen.
+- **Clearer refusals**: "no credits left" and "not switched on for this site" now have their own messages, so a
+  teacher knows what to fix.
+- LMS Labs receives `task.markingInstructions` and `scoring.maxPoints` (see docs/LMSLABS_CONTRACT.md). Backup and
+  restore include the new fields. New strings in all 18 languages.
+
 ## 1.0.5 - 2026-10-29
 
 - Marked the plugin as a stable full release in Moodle. No functionality, settings, database schema or pricing changed.

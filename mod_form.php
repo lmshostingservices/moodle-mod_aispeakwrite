@@ -85,15 +85,25 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         $mform->addHelpButton('activitytips', 'tipsformat', $p);
 
         $mform->addElement('header', 'examhdr', get_string('examsettings', $p));
-        $mform->addElement('text', 'examlevel', get_string('examlevel', $p), ['size' => 8]);
+        $mform->addElement('select', 'examlevel', get_string('examlevel', $p), $this->level_options());
         $mform->setType('examlevel', PARAM_ALPHANUMEXT);
         $mform->setDefault('examlevel', 'B1');
+        $mform->addHelpButton('examlevel', 'examlevel', $p);
         $mform->addElement('select', 'targetlang', get_string('targetlang', $p), self::target_languages());
         $mform->setDefault('targetlang', manager::default_language());
         $langs = ['' => get_string('feedbacklang_learner', $p)] + get_string_manager()->get_list_of_translations();
         $mform->addElement('select', 'feedbacklang', get_string('feedbacklang', $p), $langs);
         $mform->addHelpButton('feedbacklang', 'feedbacklang', $p);
         $mform->addElement('date_selector', 'examdate', get_string('examdate', $p), ['optional' => true]);
+
+        $mform->addElement('header', 'criteriahdr', get_string('criteriahdr', $p));
+        $mform->addElement('static', 'criteriaintro', '', get_string('criteriaintro', $p));
+        foreach (manager::CRITERIA as $key) {
+            $mform->addElement('text', 'max' . $key, get_string('max' . $key, $p), ['size' => 4]);
+            $mform->setType('max' . $key, PARAM_INT);
+            $mform->setDefault('max' . $key, manager::DEFAULTPOINTS);
+            $mform->addHelpButton('max' . $key, 'max' . $key, $p);
+        }
 
         $mform->addElement('header', 'limitshdr', get_string('limits', $p));
         $mform->addElement('text', 'dailylimit', get_string('dailylimit', $p), ['size' => 4]);
@@ -111,8 +121,24 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         $mform->addHelpButton('pastemode', 'pastemode', $p);
 
         $this->standard_grading_coursemodule_elements();
+        // The gradebook gets the share of the points; with the maximum grade at the criteria total the two match.
+        $mform->setDefault('grade', manager::DEFAULTPOINTS * count(manager::CRITERIA));
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
+    }
+
+    /**
+     * The CEFR levels, plus a level stored before 1.0.6 that isn't one of them.
+     *
+     * @return string[]
+     */
+    protected function level_options(): array {
+        $options = array_combine(manager::LEVELS, manager::LEVELS);
+        $current = (string)($this->current->examlevel ?? '');
+        if ($current !== '' && !isset($options[$current])) {
+            $options[$current] = $current;
+        }
+        return $options;
     }
 
     /**
@@ -142,6 +168,12 @@ class mod_aispeakwrite_mod_form extends moodleform_mod {
         }
         if ((int)($data['dailylimit'] ?? 0) < 0 || (int)($data['dailylimit'] ?? 0) > 50) {
             $errors['dailylimit'] = get_string('between', 'mod_aispeakwrite', ['min' => 0, 'max' => 50]);
+        }
+        foreach (manager::CRITERIA as $key) {
+            $value = (int)($data['max' . $key] ?? 0);
+            if ($value < 1 || $value > manager::MAXPOINTS) {
+                $errors['max' . $key] = get_string('between', 'mod_aispeakwrite', ['min' => 1, 'max' => manager::MAXPOINTS]);
+            }
         }
         if ((int)($data['rewritelimit'] ?? 0) < 0 || (int)($data['rewritelimit'] ?? 0) > 10) {
             $errors['rewritelimit'] = get_string('between', 'mod_aispeakwrite', ['min' => 0, 'max' => 10]);

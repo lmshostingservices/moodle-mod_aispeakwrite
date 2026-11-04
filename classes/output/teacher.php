@@ -231,7 +231,12 @@ final class teacher {
         // Figures for the last 30 days.
         $writing = array_filter($subs, fn($s) => $s->kind === 'writing');
         $speaking = array_filter($subs, fn($s) => $s->kind === 'speaking');
-        $avg = $writing ? array_sum(array_map(fn($s) => (float)$s->score, $writing)) / count($writing) : null;
+        // Average as a share of each answer's own maximum, shown against the activity's current total.
+        $total = manager::total_points($instance);
+        $avg = $writing ? array_sum(array_map(
+            fn($s) => $s->maxscore > 0 ? (float)$s->score / (float)$s->maxscore * $total : 0.0,
+            $writing
+        )) / count($writing) : null;
         $points = [0, 0];
         $understood = [0, 0];
         foreach ($subs as $s) {
@@ -258,7 +263,8 @@ final class teacher {
         $data['kpis'] = [
             ['label' => get_string('kpi_marked', self::P), 'value' => count($writing) . ' / ' . count($speaking),
                 'note' => get_string('kpi_marked_note', self::P)],
-            ['label' => get_string('kpi_avgscore', self::P), 'value' => $avg === null ? '–' : format_float($avg, 1) . ' / 45',
+            ['label' => get_string('kpi_avgscore', self::P),
+                'value' => $avg === null ? '–' : format_float($avg, 1) . ' / ' . $total,
                 'note' => get_string('kpi_strict', self::P)],
             ['label' => get_string('kpi_points', self::P), 'value' => $points[1] ? round($points[0] / $points[1] * 100) . '%'
                 : '–', 'note' => get_string('kpi_points_note', self::P)],

@@ -26,6 +26,7 @@ require(__DIR__ . '/../../config.php');
 
 use mod_aispeakwrite\form\task_form;
 use mod_aispeakwrite\local\manager;
+use mod_aispeakwrite\local\tips;
 
 $id = required_param('id', PARAM_INT);
 $taskid = optional_param('task', 0, PARAM_INT);
@@ -100,6 +101,7 @@ if ($data = $form->get_data()) {
         'guide' => trim((string)$data->guide),
         'phrases' => trim((string)($data->phrases ?? '')),
         'partnerbrief' => trim((string)($data->partnerbrief ?? '')),
+        'markinginstructions' => \core_text::substr(trim((string)($data->markinginstructions ?? '')), 0, tips::MAXCHARS),
         'audience' => in_array($data->audience, ['all', 'group', 'selected'], true) ? $data->audience : 'all',
         'groupid' => (int)($data->groupid ?? 0),
         'duedate' => (int)($data->duedate ?? 0),

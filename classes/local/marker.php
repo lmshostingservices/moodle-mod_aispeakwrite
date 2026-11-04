@@ -117,6 +117,7 @@ final class marker {
                 'points' => $points,
                 'formality' => (string)$task->formality,
                 'targetWords' => (int)$task->targetwords,
+                'markingInstructions' => (string)($task->markinginstructions ?? ''),
             ],
             'tips' => array_map(
                 fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'tip' => $t['tip'],
@@ -125,7 +126,8 @@ final class marker {
                 $merged['tips']
             ),
             'patterns' => tips::patterns($instance->targetlang),
-            'scoring' => ['criteria' => manager::CRITERIA, 'bands' => manager::BANDS, 'examScore' => true],
+            'scoring' => ['criteria' => manager::CRITERIA, 'bands' => manager::BANDS, 'examScore' => true,
+                'maxPoints' => manager::criterion_max($instance)],
             'options' => ['markGood' => (bool)$instance->showgood],
             'answer' => ['text' => self::answer_text($sub)],
         ];
@@ -234,7 +236,14 @@ final class marker {
         $credits = is_array($data) && isset($data['creditsCharged']) && is_numeric($data['creditsCharged'])
             ? (int)$data['creditsCharged'] : 1;
         $feedback = is_array($data) && is_array($data['result'] ?? null)
-            ? self::normalise($data['result'], $text, $task, $merged['tips'], $instance->targetlang) : null;
+            ? self::normalise(
+                $data['result'],
+                $text,
+                $task,
+                $merged['tips'],
+                $instance->targetlang,
+                manager::criterion_max($instance)
+            ) : null;
         operation::complete($op, $credits);
         if ($feedback === null) {
             $DB->set_field('aispeakwrite_sub', 'status', 'failed', ['id' => $sub->id]);
@@ -306,9 +315,17 @@ final class marker {
      * @param \stdClass $task
      * @param array $tips merged tips
      * @param string|null $targetlang the language being learned: only its patterns may be cited (all when null)
+     * @param int[]|null $max points each criterion is worth (15 each when null)
      * @return array|null null when nothing usable came back
      */
-    public static function normalise(array $r, string $text, \stdClass $task, array $tips, ?string $targetlang = null): ?array {
+    public static function normalise(
+        array $r,
+        string $text,
+        \stdClass $task,
+        array $tips,
+        ?string $targetlang = null,
+        ?array $max = null
+    ): ?array {
         $ruleids = array_column($tips, 'id');
         foreach ($targetlang === null ? tips::all_pattern_names() : tips::pattern_names($targetlang) as $p) {
             $ruleids[] = 'grammar:' . $p;
@@ -318,7 +335,10 @@ final class marker {
         $criteria = [];
         $score = 0;
         $examscore = 0;
+        $maxscore = 0;
         foreach (manager::CRITERIA as $key) {
+            // The AI marks on the 0–15 scale; the band is then turned into the activity's own points.
+            $critmax = (int)($max[$key] ?? manager::DEFAULTPOINTS);
             $c = is_array($r['criteria'][$key] ?? null) ? $r['criteria'][$key] : null;
             if ($c === null) {
                 return null;
@@ -326,9 +346,13 @@ final class marker {
             $strict = manager::band($c['atg'] ?? $c['strict'] ?? 0);
             $exam = manager::band($c['telc'] ?? $c['exam'] ?? $strict);
             $exam = max($exam, $strict);
-            $criteria[$key] = ['strict' => $strict, 'exam' => $exam, 'reason' => self::clean($c['reason'] ?? '', 600)];
+            $strict = manager::scale_band($strict, $critmax);
+            $exam = manager::scale_band($exam, $critmax);
+            $criteria[$key] = ['strict' => $strict, 'exam' => $exam, 'max' => $critmax,
+                'reason' => self::clean($c['reason'] ?? '', 600)];
             $score += $strict;
             $examscore += $exam;
+            $maxscore += $critmax;
         }
 
         $known = [];
@@ -432,7 +456,7 @@ final class marker {
             'criteria' => $criteria,
             'score' => $score,
             'examscore' => $examscore,
-            'maxscore' => 15 * count(manager::CRITERIA),
+            'maxscore' => $maxscore,
             'points' => array_values($points),
             'marks' => $marks,
             'strengths' => self::strings($r['communication']['strengths'] ?? [], 4, 300),

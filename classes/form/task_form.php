@@ -79,6 +79,14 @@ class task_form extends \moodleform {
         $mform->addElement('textarea', 'points', get_string('points', $p), ['rows' => 5, 'cols' => 70]);
         $mform->setType('points', PARAM_TEXT);
         $mform->addHelpButton('points', 'points', $p);
+        $mform->addElement(
+            'textarea',
+            'markinginstructions',
+            get_string('markinginstructions', $p),
+            ['rows' => 6, 'cols' => 70, 'maxlength' => tips::MAXCHARS]
+        );
+        $mform->setType('markinginstructions', PARAM_TEXT);
+        $mform->addHelpButton('markinginstructions', 'markinginstructions', $p);
 
         if ($kind === 'writing') {
             $mform->addElement(
@@ -160,7 +168,7 @@ class task_form extends \moodleform {
      */
     public function validation($data, $files) {
         $errors = parent::validation($data, $files);
-        foreach (['tasktips'] as $field) {
+        foreach (['tasktips', 'markinginstructions'] as $field) {
             if (\core_text::strlen((string)($data[$field] ?? '')) > tips::MAXCHARS) {
                 $errors[$field] = get_string('toolong', 'mod_aispeakwrite', tips::MAXCHARS);
             }

@@ -55,7 +55,7 @@ $error = '';
 if ($text !== '' && confirm_sesskey()) {
     $sub = (object)['id' => 0, 'taskid' => $task->id, 'userid' => $USER->id, 'attempt' => 1, 'kind' => $task->kind,
         'fbmode' => $mode, 'metrics' => '', 'notes' => '', 'status' => 'marked', 'score' => 0, 'examscore' => 0,
-        'maxscore' => 45, 'content' => $task->kind === 'speaking'
+        'maxscore' => manager::total_points($instance), 'content' => $task->kind === 'speaking'
             ? json_encode(['turns' => [['role' => 'learner', 'text' => $text]]], JSON_UNESCAPED_UNICODE) : $text];
     $merged = tips::merged($instance, $task);
     try {
@@ -76,7 +76,8 @@ if ($text !== '' && confirm_sesskey()) {
             marker::answer_text($sub),
             $task,
             $merged['tips'],
-            $instance->targetlang
+            $instance->targetlang,
+            manager::criterion_max($instance)
         ) : null;
         if ($fb === null) {
             throw new moodle_exception('unusableresult', 'mod_aispeakwrite', '', '-');

@@ -47,7 +47,7 @@ class backup_aispeakwrite_activity_structure_step extends backup_activity_struct
             [
                 'name', 'intro', 'introformat', 'correctionmode', 'showtelc', 'showgood', 'sendhistory', 'dailylimit',
                 'rewritelimit', 'activitytips', 'examlevel', 'targetlang', 'feedbacklang', 'examdate', 'grade',
-                'completionmarked', 'pastemode',
+                'completionmarked', 'pastemode', 'maxtask', 'maxcommunication', 'maxform',
                 'timecreated',
             'timemodified']
         );
@@ -57,7 +57,8 @@ class backup_aispeakwrite_activity_structure_step extends backup_activity_struct
             ['id'],
             [
                 'kind', 'tasktype', 'title', 'topic', 'situation', 'sourcetext', 'points', 'formality', 'targetwords',
-                'timelimit', 'tasktips', 'guide', 'phrases', 'partnerbrief', 'audience', 'groupid', 'duedate', 'visible',
+                'timelimit', 'tasktips', 'guide', 'phrases', 'partnerbrief', 'markinginstructions', 'audience', 'groupid',
+                'duedate', 'visible',
                 'sortorder',
                 'timecreated',
             'timemodified']

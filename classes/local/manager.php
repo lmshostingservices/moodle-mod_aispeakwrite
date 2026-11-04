@@ -36,6 +36,15 @@ final class manager {
     /** @var string[] Criteria keys, in display order. */
     public const CRITERIA = ['task', 'communication', 'form'];
 
+    /** @var int Points for a criterion when the activity doesn't set its own (the telc scale). */
+    public const DEFAULTPOINTS = 15;
+
+    /** @var int Most points a teacher can give one criterion. */
+    public const MAXPOINTS = 100;
+
+    /** @var string[] CEFR levels a task can be set at. */
+    public const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
     /** @var string[] Languages that can be learned, as BCP 47 tags. */
     public const LANGUAGES = ['de-DE', 'de-AT', 'de-CH', 'en-GB', 'en-US', 'fr-FR', 'es-ES', 'it-IT', 'nl-NL', 'pt-PT'];
 
@@ -130,6 +139,10 @@ final class manager {
         $data->feedbacklang = preg_match('/^[a-z]{2,3}(_[a-z]{2,4})?$/', (string)($data->feedbacklang ?? ''))
             ? $data->feedbacklang : '';
         $data->examdate = (int)($data->examdate ?? 0);
+        foreach (self::CRITERIA as $key) {
+            $value = (int)($data->{'max' . $key} ?? self::DEFAULTPOINTS);
+            $data->{'max' . $key} = $value >= 1 && $value <= self::MAXPOINTS ? $value : self::DEFAULTPOINTS;
+        }
         $data->pastemode = array_key_exists((string)($data->pastemode ?? ''), integrity::paste_modes())
             ? $data->pastemode : integrity::default_paste_mode();
         if (isset($data->completionmarked)) {
@@ -306,6 +319,52 @@ final class manager {
      */
     public static function can_start_draft(\stdClass $instance, int $taskid, int $userid): bool {
         return self::attempts_used($taskid, $userid) < 1 + (int)$instance->rewritelimit;
+    }
+
+    /**
+     * The points each criterion is worth in an activity (Content, Communication, Form).
+     *
+     * @param \stdClass $instance activity record
+     * @return int[] criterion key => points
+     */
+    public static function criterion_max(\stdClass $instance): array {
+        $out = [];
+        foreach (self::CRITERIA as $key) {
+            $value = (int)($instance->{'max' . $key} ?? 0);
+            $out[$key] = $value > 0 ? min(self::MAXPOINTS, $value) : self::DEFAULTPOINTS;
+        }
+        return $out;
+    }
+
+    /**
+     * The most points an answer can get in an activity.
+     *
+     * @param \stdClass $instance
+     * @return int
+     */
+    public static function total_points(\stdClass $instance): int {
+        return array_sum(self::criterion_max($instance));
+    }
+
+    /**
+     * Turns a band on the 0–15 marking scale into points for a criterion worth $max points.
+     *
+     * @param int $band one of BANDS
+     * @param int $max
+     * @return int
+     */
+    public static function scale_band(int $band, int $max): int {
+        return (int)round($band / self::DEFAULTPOINTS * $max);
+    }
+
+    /**
+     * The score steps of a criterion worth $max points (0, 3, 9, 15 for 15 points).
+     *
+     * @param int $max
+     * @return int[]
+     */
+    public static function bands_for(int $max): array {
+        return array_values(array_unique(array_map(fn($b) => self::scale_band($b, $max), self::BANDS)));
     }
 
     /**

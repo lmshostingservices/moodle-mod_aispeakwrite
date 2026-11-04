@@ -25,11 +25,11 @@
         "modelabel": "Make me think", "modeexplain": "Hints only.", "content": "Lieber Tim,", "notes": "", "words": 2,
         "pending": false, "minutes": 30,
         "phases": [{"label": "Read", "min": 3, "phase": "read"}, {"label": "Write", "min": 15, "phase": "write"}],
-        "haschecks": true, "checks": [{"name": "Satzanfang", "tip": "Start with a detail"}],
+        "haschecks": true, "checkcount": 1, "checks": [{"name": "Satzanfang", "tip": "Start with a detail"}],
         "hasgroups": true, "groups": [{"name": "Closing", "items": [{"text": "Liebe Grüße"}]}],
         "keys": [{"key": "ä"}], "markingsleft": "2 of 3 markings left today", "nomarkings": false,
         "hasguide": false, "guide": "", "backurl": "#", "lang": "de-DE",
-        "hassituation": false, "hassource": false, "haspoints": false, "targetwords": 150,
+        "hassituation": false, "hassource": false, "haspoints": false, "pointsbeside": true, "points": [], "targetwords": 150,
         "pastenotice": "Your teacher can see how often you paste text from outside the answer box.", "disclosure": ""
     }
 }}
@@ -52,8 +52,9 @@
 
     {{> mod_aispeakwrite/task_panel }}
 
-    <div class="asw-row">
-        <section class="asw-card asw-card--flush asw-main">
+    <div class="asw-wgrid">
+        <div class="asw-wgrid__col asw-wgrid__col--main">
+        <section class="asw-card asw-card--flush asw-wgrid__answer">
             <div class="asw-card__head">
                 <label for="asw-answer-{{subid}}" style="font-weight: 600; margin: 0;">{{#str}}youranswer, mod_aispeakwrite{{/str}}</label>
                 <span class="asw-sub"><strong class="asw-num" data-region="words">{{words}}</strong> {{#targetwords}}/ ~{{targetwords}}{{/targetwords}} {{#str}}words, mod_aispeakwrite{{/str}}</span>
@@ -70,7 +71,33 @@
             {{^haskeys}}<div class="asw-card__foot"><span class="asw-sub" data-region="saved" aria-live="polite"></span></div>{{/haskeys}}
         </section>
 
-        <aside class="asw-side">
+        {{#haschecks}}
+        <details class="asw-card asw-wgrid__checks" data-region="checks" open>
+            <summary class="asw-label">{{#str}}checkbefore, mod_aispeakwrite{{/str}} <span class="asw-sub">({{checkcount}})</span></summary>
+            <div class="asw-checks">
+                {{#checks}}
+                    <label class="asw-check"><input type="checkbox"><span><strong>{{name}}:</strong> {{tip}}</span></label>
+                {{/checks}}
+            </div>
+        </details>
+        {{/haschecks}}
+
+        </div>
+        <div class="asw-wgrid__col asw-wgrid__col--side">
+        {{#haspoints}}
+        <section class="asw-card asw-wgrid__points" aria-labelledby="asw-points-h-{{subid}}">
+            <h3 class="asw-label" id="asw-points-h-{{subid}}">{{#str}}pointstocover, mod_aispeakwrite{{/str}}</h3>
+            {{#points}}
+                <div class="asw-point">
+                    <span class="asw-point__n">{{n}}</span>
+                    <span>{{text}} {{#min}}<span class="asw-pill asw-pill--blue">{{min}}</span>{{/min}}</span>
+                </div>
+            {{/points}}
+            {{#targetwords}}<span class="asw-sub">{{#str}}aboutwords, mod_aispeakwrite, {{targetwords}}{{/str}}</span>{{/targetwords}}
+        </section>
+        {{/haspoints}}
+
+        <aside class="asw-side asw-wgrid__side">
             <section class="asw-card">
                 <span class="asw-label">{{#str}}yourtime, mod_aispeakwrite, {{minutes}}{{/str}}</span>
                 <div class="asw-phases" data-region="phases" data-minutes="{{minutes}}" style="grid-template-columns: {{#phases}}{{min}}fr {{/phases}};">
@@ -80,15 +107,6 @@
                     {{#phases}}<small class="asw-sub">{{label}}</small>{{/phases}}
                 </div>
             </section>
-
-            {{#haschecks}}
-            <section class="asw-card">
-                <span class="asw-label">{{#str}}checkbefore, mod_aispeakwrite{{/str}}</span>
-                {{#checks}}
-                    <label class="asw-check"><input type="checkbox"><span><strong>{{name}}:</strong> {{tip}}</span></label>
-                {{/checks}}
-            </section>
-            {{/haschecks}}
 
             {{#hasgroups}}
             <section class="asw-card">
@@ -116,11 +134,12 @@
                 <textarea class="asw-notes" id="asw-notes-{{subid}}" data-region="notes" data-essayguard="off" placeholder="{{#str}}draftnote_placeholder, mod_aispeakwrite{{/str}}">{{notes}}</textarea>
             </section>
         </aside>
+        </div>
     </div>
 
     {{#pastenotice}}<div class="asw-sub" data-region="pastenotice">{{pastenotice}}</div>{{/pastenotice}}
     <div class="asw-sub" data-region="pasteblocked" role="status" aria-live="polite"></div>
-    {{#disclosure}}<div class="asw-card asw-disclosure">{{{disclosure}}}</div>{{/disclosure}}
+    {{#disclosure}}<details class="asw-sub asw-disclosure" data-region="disclosure"><summary>{{#str}}monitoringdetails, mod_aispeakwrite{{/str}}</summary>{{{disclosure}}}</details>{{/disclosure}}
     <div class="asw-card asw-submitbar">
         <span style="flex: 1 1 280px;">{{modeexplain}}</span>
         {{#markingsleft}}<span class="asw-sub">{{markingsleft}}</span>{{/markingsleft}}

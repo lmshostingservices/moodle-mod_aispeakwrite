@@ -48,6 +48,27 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
         new admin_setting_heading(
+            'mod_aispeakwrite/leveltipsheading',
+            get_string('leveltipsheading', $p),
+            get_string('leveltipsheading_desc', $p)
+        )
+    );
+    foreach (\mod_aispeakwrite\local\manager::LEVELS as $level) {
+        $settings->add(
+            new \mod_aispeakwrite\admin\setting_tips(
+                'mod_aispeakwrite/leveltips' . strtolower($level),
+                get_string('leveltips', $p, $level),
+                get_string('leveltips_desc', $p, $level),
+                '',
+                PARAM_TEXT,
+                70,
+                8
+            )
+        );
+    }
+
+    $settings->add(
+        new admin_setting_heading(
             'mod_aispeakwrite/lmslabsheading',
             get_string('lmslabsheading', $p),
             get_string('lmslabsheading_desc', $p) . ' ' .

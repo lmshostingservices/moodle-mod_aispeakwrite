@@ -69,7 +69,8 @@ if (!$sub) {
         [(int)$cm->id, (int)$sub->id, integrity::paste_mode($instance)]
     );
     $data = views::writer($instance, $cm, $task, $sub);
-    // Plagiarism plugins (Essay Guard) tell the learner what they record while they write.
+    // Plagiarism plugins (Essay Guard) tell the learner what they record while they write. The full text sits behind a
+    // "How this activity is monitored" link, so it doesn't take up the writing screen.
     require_once($CFG->libdir . '/plagiarismlib.php');
     $data['disclosure'] = plagiarism_print_disclosure($cm->id);
     echo $OUTPUT->render_from_template('mod_aispeakwrite/writer', $data);

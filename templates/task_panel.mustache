@@ -17,7 +17,7 @@
 {{!
     @template mod_aispeakwrite/task_panel
 
-    The task: situation, source text and content points.
+    The task: situation, source text and, unless the page shows them beside the answer, the content points.
 
     Example context (json):
     {
@@ -37,7 +37,7 @@
             {{#hassituation}}<p class="asw-sub" style="font-style: italic;">{{{situation}}}</p>{{/hassituation}}
             {{#hassource}}<div class="asw-task__mail">{{{sourcetext}}}</div>{{/hassource}}
         </div>
-        {{#haspoints}}
+        {{^pointsbeside}}{{#haspoints}}
         <div class="asw-side">
             <span class="asw-label">{{#str}}pointstocover, mod_aispeakwrite{{/str}}</span>
             {{#points}}
@@ -48,6 +48,6 @@
             {{/points}}
             {{#targetwords}}<span class="asw-sub">{{#str}}aboutwords, mod_aispeakwrite, {{targetwords}}{{/str}}</span>{{/targetwords}}
         </div>
-        {{/haspoints}}
+        {{/haspoints}}{{/pointsbeside}}
     </div>
 </section>

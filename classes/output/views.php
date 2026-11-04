@@ -220,7 +220,9 @@ final class views {
             $fb = submissions::feedback($sub);
             foreach (manager::CRITERIA as $key) {
                 if (isset($fb['criteria'][$key])) {
-                    $sums[$sub->kind][$key][] = $fb['criteria'][$key]['strict'];
+                    // Percent of the criterion's points (15 for answers marked before 1.0.6).
+                    $sums[$sub->kind][$key][] = $fb['criteria'][$key]['strict']
+                        / max(1, (int)($fb['criteria'][$key]['max'] ?? manager::DEFAULTPOINTS)) * 100;
                 }
             }
             if ($sub->kind === 'speaking' && $fb['understood'] !== null) {
@@ -241,7 +243,7 @@ final class views {
                 if (empty($sums[$kind][$key])) {
                     continue;
                 }
-                $pct = (int)round(array_sum($sums[$kind][$key]) / count($sums[$kind][$key]) / 15 * 100);
+                $pct = (int)round(array_sum($sums[$kind][$key]) / count($sums[$kind][$key]));
                 $rows[] = self::skill(manager::criterion_label($kind, $key, $instance->targetlang), $pct);
             }
             if ($kind === 'speaking' && $understood[1]) {
@@ -505,6 +507,8 @@ final class views {
                 'modeexplain' => get_string('fbmode_' . $sub->fbmode . '_desc', self::P),
                 'checks' => $checks,
                 'haschecks' => !empty($checks),
+                'checkcount' => count($checks),
+                'pointsbeside' => true,
                 'groups' => $groups,
                 'hasgroups' => !empty($groups),
                 'keys' => array_map(fn($k) => ['key' => $k], self::keys($instance->targetlang)),
@@ -698,7 +702,7 @@ final class views {
         foreach (manager::CRITERIA as $key) {
             $c = $fb['criteria'][$key] ?? ['strict' => 0, 'exam' => 0, 'reason' => ''];
             $steps = [];
-            foreach (manager::BANDS as $band) {
+            foreach (manager::bands_for((int)($c['max'] ?? manager::DEFAULTPOINTS)) as $band) {
                 $steps[] = ['value' => $band, 'on' => $band <= $c['strict'] && $band > 0,
                     'exam' => $band > $c['strict'] && $band <= $c['exam'] && !empty($instance->showtelc),
                     'current' => $band === $c['strict']];
@@ -706,6 +710,7 @@ final class views {
             $data['criteria'][] = [
                 'name' => manager::criterion_label($sub->kind, $key, $instance->targetlang),
                 'strict' => $c['strict'], 'exam' => $c['exam'], 'reason' => (string)($c['reason']), 'steps' => $steps,
+                'max' => (int)($c['max'] ?? manager::DEFAULTPOINTS),
                 'showexam' => !empty($instance->showtelc),
             ];
         }

@@ -25,7 +25,7 @@
         "title": "Geburtstagsfeier", "typelabel": "Email", "draftn": "Draft 1", "modelabel": "Make me think",
         "summary": "You accept and congratulate. Point 3 is missing.", "score": "27", "max": "45", "exam": "33",
         "showtelc": true,
-        "criteria": [{"name": "Task", "strict": 9, "exam": 9, "reason": "", "showexam": true,
+        "criteria": [{"name": "Task", "strict": 9, "exam": 9, "max": 15, "reason": "", "showexam": true,
             "steps": [{"value": 0, "on": false, "exam": false, "current": false}, {"value": 3, "on": true, "exam": false, "current": false}]}],
         "paragraphs": [{"segments": [{"plain": true, "text": "Lieber Tim,"}]}],
         "words": 128,
@@ -102,7 +102,7 @@
                     <div class="asw-steps" aria-hidden="true">
                         {{#steps}}<span class="{{#on}}asw-step--on{{/on}} {{#exam}}asw-step--exam{{/exam}} {{#current}}asw-step--current{{/current}}"><i></i>{{value}}</span>{{/steps}}
                     </div>
-                    <span class="asw-num" style="white-space: nowrap;"><strong>{{strict}}</strong>{{#showexam}} <span style="color: var(--asw-blue-text);">({{#str}}examscore, mod_aispeakwrite, {{exam}}{{/str}})</span>{{/showexam}}</span>
+                    <span class="asw-num" style="white-space: nowrap;"><strong>{{strict}}</strong> / {{max}}{{#showexam}} <span style="color: var(--asw-blue-text);">({{#str}}examscore, mod_aispeakwrite, {{exam}}{{/str}})</span>{{/showexam}}</span>
                 </div>
                 {{#reason}}<span class="asw-sub" style="margin-top: -6px;">{{reason}}</span>{{/reason}}
             {{/criteria}}

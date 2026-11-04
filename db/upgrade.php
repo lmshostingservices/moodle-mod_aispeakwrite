@@ -57,5 +57,28 @@ function xmldb_aispeakwrite_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026102900, 'aispeakwrite');
     }
 
+    if ($oldversion < 2026110400) {
+        // Points for each criterion, set per activity (15 each, the telc scale, until a teacher changes them).
+        $table = new xmldb_table('aispeakwrite');
+        $fields = [
+            new xmldb_field('maxtask', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '15', 'pastemode'),
+            new xmldb_field('maxcommunication', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '15', 'maxtask'),
+            new xmldb_field('maxform', XMLDB_TYPE_INTEGER, '4', null, XMLDB_NOTNULL, null, '15', 'maxcommunication'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Marking instructions for each task, sent to the marking and never shown to learners.
+        $table = new xmldb_table('aispeakwrite_task');
+        $field = new xmldb_field('markinginstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'partnerbrief');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2026110400, 'aispeakwrite');
+    }
+
     return true;
 }

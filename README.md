@@ -65,12 +65,16 @@ Writing works in every browser.
 
 - **Correction mode** per activity: two-step (Make me think on the first draft, Explain on the rewrite), Make me think
   only, or Explain only. Learners can't change it.
-- **School tips and tricks** (site), **activity tips** and **task tips**: one tip per line, `Name: tip | example`,
-  up to 4,000 characters per box. The most specific tip wins when names match. The AI cites tips by name; each tip
+- **Points for each criterion** per activity: Content, Communication and Form, 15 each by default (1–100). Feedback
+  shows each criterion out of its points, and the gradebook gets the share of the total; set the maximum grade to
+  the total (45 by default) so both show the same points.
+- **Level** per activity (A1–C2): the AI marks at this level.
+- **School tips and tricks** (site), **tips for each level** (site, A1–C2), **activity tips** and **task tips**: one
+  tip per line, `Name: tip | example`, up to 10,000 characters per box. The most specific tip wins when names match. The AI cites tips by name; each tip
   is tracked per learner. Every marking stores which version of the tips was used.
 - **Tasks**: writing (email with task points, translation, free writing) and speaking (parts 1–3) with situation,
-  source text, task points (`Point | 2` for "at least two"), time, target length, guide, phrase bank and the AI
-  partner's role. Assign to the whole class, one group or selected learners, with a due date.
+  source text, task points (`Point | 2` for "at least two"), teacher-only marking instructions (how exactly to mark
+  this task, sent with every marking), time, target length, guide, phrase bank and the AI partner's role. Assign to the whole class, one group or selected learners, with a due date.
 - **Limits**: markings per learner per day and rewrites per task.
 - **Test with a sample answer**: marks a pasted text with the current tips (1 credit, not saved as an attempt).
 - **Class analytics**: most common mistakes, which learners keep missing each one, assign practice to them in one

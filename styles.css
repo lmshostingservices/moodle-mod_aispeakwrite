@@ -1335,3 +1335,83 @@
     font-weight: 600;
     color: var(--asw-warn, #b45309);
 }
+
+/* Writing screen (1.0.5): content points beside the answer, tips under it. */
+.asw-wgrid {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.asw-wgrid__col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.asw-wgrid__col--main {
+    flex: 1 1 0;
+}
+
+.asw-wgrid__col--side {
+    flex: 0 0 330px;
+    gap: 14px;
+}
+
+.asw-wgrid__points {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.asw-wgrid__points .asw-point {
+    align-items: flex-start;
+    padding: 8px 12px;
+    font-size: .875rem;
+}
+
+.asw-wgrid__checks > summary {
+    cursor: pointer;
+    list-style-position: inside;
+}
+
+.asw-checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px 20px;
+    margin-top: 12px;
+}
+
+.asw-disclosure > summary {
+    cursor: pointer;
+    display: inline;
+}
+
+/* Phones and narrow windows: points, answer, checks, then the rest. */
+@media (max-width: 900px) {
+    .asw-wgrid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .asw-wgrid__col {
+        display: contents;
+    }
+
+    .asw-wgrid__points {
+        order: 1;
+    }
+
+    .asw-wgrid__answer {
+        order: 2;
+    }
+
+    .asw-wgrid__checks {
+        order: 3;
+    }
+
+    .asw-wgrid__side {
+        order: 4;
+    }
+}
