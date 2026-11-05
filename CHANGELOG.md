@@ -3,6 +3,13 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.7 - 2026-11-05
+
+- **Fixed "Marking is unavailable … isn't switched on for this site"**: LMS Labs only marks for sites that have switched
+  AI Advent on, and the plugin had no way to do that, so every new site was refused. Moodle now switches it on by
+  itself the first time LMS Labs refuses (free, no credits used) and sends the same answer again straight away.
+  If switching on fails, it waits ten minutes before trying again. No settings, database or pricing changes.
+
 ## 1.0.6 - 2026-11-04
 
 Changes requested by Advent Training Group after testing. Database upgrade: three activity settings and one field per

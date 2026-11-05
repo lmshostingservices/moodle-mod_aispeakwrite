@@ -201,6 +201,68 @@ final class charging_test extends \advanced_testcase {
     }
 
     /**
+     * A site that hasn't switched the plugin on yet: Moodle switches it on (free) and resends the same request once.
+     */
+    public function test_not_switched_on_unlocks_and_resends(): void {
+        global $DB;
+        [$instance, $task, $user, $context] = $this->setup_activity();
+        $this->answers = [
+            [403, json_encode(['error' => ['code' => 'NO_ENTITLEMENT']])],
+            [200, json_encode(['unlocked' => true])],
+            $this->delivered(),
+        ];
+        $marked = marker::mark($instance, $task, $this->draft($instance, $task, $user), $context);
+        $this->assertSame('marked', $marked->status);
+        $this->assertCount(3, $this->calls);
+        $this->assertStringEndsWith(remote::UNLOCK, $this->calls[1]['url']);
+        $unlock = json_decode($this->calls[1]['body'], true);
+        $this->assertSame(['pluginId' => 'aispeakwrite', 'siteId' => 'site-1', 'apiKey' => 'key-secret'], $unlock);
+        // The resend is the same request: same route, same body, same Idempotency-Key.
+        $this->assertSame($this->calls[0]['url'], $this->calls[2]['url']);
+        $this->assertSame($this->calls[0]['body'], $this->calls[2]['body']);
+        $key = fn($h) => array_values(array_filter($h, fn($l) => str_starts_with($l, 'Idempotency-Key:')));
+        $this->assertSame($key($this->calls[0]['headers']), $key($this->calls[2]['headers']));
+        $this->assertNotEmpty(get_config('mod_aispeakwrite', 'unlocked'));
+        $this->assertSame(1, $DB->count_records('aispeakwrite_op'));
+    }
+
+    /**
+     * When switching on fails, the learner gets the "not switched on" message, and Moodle waits ten minutes before
+     * trying to switch on again. A 402 (no credits) never tries to switch on.
+     */
+    public function test_switch_on_fails_and_waits(): void {
+        [$instance, $task, $user, $context] = $this->setup_activity();
+        $refused = [403, json_encode(['error' => ['code' => 'NO_ENTITLEMENT']])];
+        $this->answers = [$refused, [400, json_encode(['error' => 'UNKNOWN_PLUGIN'])]];
+        $sub = $this->draft($instance, $task, $user);
+        try {
+            marker::mark($instance, $task, $sub, $context);
+            $this->fail('Expected a refusal');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('remoterefused_no_entitlement', $e->errorcode);
+        }
+        $this->assertDebuggingCalled();
+        $this->assertCount(2, $this->calls);
+        $this->answers = [$refused];
+        $this->calls = [];
+        try {
+            marker::mark($instance, $task, submissions::get((int)$sub->id, (int)$instance->id), $context);
+        } catch (\moodle_exception $e) {
+            $this->assertSame('remoterefused_no_entitlement', $e->errorcode);
+        }
+        $this->assertCount(1, $this->calls, 'No second switch-on within ten minutes');
+        $this->answers = [[402, json_encode(['error' => ['code' => 'INSUFFICIENT_CREDITS']])]];
+        $this->calls = [];
+        set_config('unlocktried', 0, 'mod_aispeakwrite');
+        try {
+            marker::mark($instance, $task, submissions::get((int)$sub->id, (int)$instance->id), $context);
+        } catch (\moodle_exception $e) {
+            $this->assertSame('remoterefused_insufficient_credits', $e->errorcode);
+        }
+        $this->assertCount(1, $this->calls);
+    }
+
+    /**
      * No definite answer keeps the request pending; trying again sends the same key and the same body.
      */
     public function test_uncertain_retries_same_key(): void {

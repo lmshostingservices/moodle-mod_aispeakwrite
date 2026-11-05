@@ -40,6 +40,15 @@ final class remote {
     /** @var string Credit balance. */
     public const CREDITS = '/api/credits';
 
+    /** @var string Route that switches a plugin on for a site (as Essay Guard uses). */
+    public const UNLOCK = '/api/plugin-unlock';
+
+    /** @var string This plugin's id at LMS Labs. */
+    public const PLUGINID = 'aispeakwrite';
+
+    /** @var int Seconds to wait before trying to switch the plugin on again after a failed try. */
+    public const UNLOCKRETRY = 600;
+
     /** @var string[] Error codes that leave the outcome unknown (the same key must be asked again). */
     public const UNCERTAIN = ['SETTLEMENT_UNCONFIRMED', 'DEADLINE_EXCEEDED'];
 
@@ -63,15 +72,96 @@ final class remote {
      * @throws \moodle_exception remoteuncertain when no answer arrived
      */
     public static function request(string $path, ?array $body = null, string $key = '', int $timeout = 60): array {
-        global $CFG;
+        $answer = self::send($path, $body, $key, $timeout);
+        // LMS Labs refuses a site that hasn't switched this plugin on yet (403 NO_ENTITLEMENT). Switching it on is
+        // free for this plugin, so do it once and send the same request again, with the same key and body. The
+        // refusal came before anything was charged or stored, so resending is safe.
+        if (in_array($path, [self::MARK, self::CONVERSE], true) && self::needs_unlock($answer[0], $answer[1])) {
+            if (self::unlock()) {
+                $answer = self::send($path, $body, $key, $timeout);
+            }
+        }
+        return $answer;
+    }
+
+    /**
+     * Whether an answer is LMS Labs saying this plugin isn't switched on for the site.
+     *
+     * @param int $status
+     * @param string $body
+     * @return bool
+     */
+    public static function needs_unlock(int $status, string $body): bool {
+        return $status === 403 && self::error($status, $body) !== 'INSUFFICIENT_CREDITS';
+    }
+
+    /**
+     * Switches this plugin on for the site at LMS Labs (free for AI Advent Speaking and Writing).
+     *
+     * Tried at most once every ten minutes after a failure, so a site that can't be switched on doesn't send an
+     * extra request with every marking.
+     *
+     * @return bool true when LMS Labs says the plugin is now switched on
+     */
+    public static function unlock(): bool {
+        $last = (int)get_config('mod_aispeakwrite', 'unlocktried');
+        if ($last > 0 && time() - $last < self::UNLOCKRETRY) {
+            return false;
+        }
+        set_config('unlocktried', time(), 'mod_aispeakwrite');
+        $pair = credentials::resolve();
+        $fields = ['pluginId' => self::PLUGINID, 'siteId' => $pair['siteid'], 'apiKey' => $pair['apikey']];
+        $json = json_encode($fields, JSON_UNESCAPED_SLASHES);
+        $headers = ['X-Site-ID: ' . $pair['siteid'], 'X-API-Key: ' . $pair['apikey'],
+            'Content-Type: application/json', 'Accept: application/json'];
+        try {
+            [$status, $response] = self::transmit(self::HOST . self::UNLOCK, $headers, $json, 15);
+        } catch (\moodle_exception $e) {
+            return false;
+        }
+        $data = json_decode($response, true);
+        if ($status !== 200 || !is_array($data) || empty($data['unlocked'])) {
+            debugging('[mod_aispeakwrite] LMS Labs did not switch the plugin on (HTTP ' . $status . ').', DEBUG_DEVELOPER);
+            return false;
+        }
+        set_config('unlocked', time(), 'mod_aispeakwrite');
+        unset_config('unlocktried', 'mod_aispeakwrite');
+        return true;
+    }
+
+    /**
+     * Sends one request to a route on the fixed host, without the switch-on step.
+     *
+     * @param string $path
+     * @param array|null $body
+     * @param string $key
+     * @param int $timeout
+     * @return array [status, body, info, headers (lower-case names)]
+     * @throws \moodle_exception remoteuncertain when no answer arrived
+     */
+    protected static function send(string $path, ?array $body, string $key, int $timeout): array {
         $pair = credentials::resolve();
         $headers = ['X-Site-ID: ' . $pair['siteid'], 'X-API-Key: ' . $pair['apikey'], 'Accept: application/json'];
         if ($body !== null) {
             $headers[] = 'Content-Type: application/json';
             $headers[] = 'Idempotency-Key: ' . $key;
         }
-        $url = self::HOST . $path;
         $json = $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return self::transmit(self::HOST . $path, $headers, $json, $timeout);
+    }
+
+    /**
+     * Sends bytes over HTTPS (or the test transport).
+     *
+     * @param string $url
+     * @param array $headers
+     * @param string|null $json POST body, or null for GET
+     * @param int $timeout
+     * @return array [status, body, info, headers (lower-case names)]
+     * @throws \moodle_exception remoteuncertain when no answer arrived
+     */
+    protected static function transmit(string $url, array $headers, ?string $json, int $timeout): array {
+        global $CFG;
         if (self::$transport !== null) {
             $answer = (self::$transport)($url, $headers, $json);
             return [(int)$answer[0], (string)$answer[1], $answer[2] ?? [], array_change_key_case($answer[3] ?? [])];

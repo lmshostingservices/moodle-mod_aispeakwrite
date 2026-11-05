@@ -1,6 +1,6 @@
 # LMS Labs routes needed by AI Advent Speaking and Writing
 
-This is the contract `mod_aispeakwrite` 1.0.0–1.0.6 calls. Until LMS Labs publishes these routes they answer 404, and the
+This is the contract `mod_aispeakwrite` 1.0.0–1.0.7 calls. Until LMS Labs publishes these routes they answer 404, and the
 plugin tells learners "Marking isn't switched on for this site yet" (nothing is charged, the answer stays saved).
 
 All requests go server-to-server from Moodle to `https://lms-labs.com`. Redirects are never followed.
@@ -204,6 +204,19 @@ Response 200: `{"reply": "Freitag passt mir gut. Aber wo?", "done": false, "cred
 The partner should speak at the task's level, keep each turn short (1–3 sentences), disagree sometimes, ask
 questions that bring the learner back to uncovered task points, and never correct the learner during the conversation.
 
-## 3. Balance — `GET /api/credits?siteId=…`
+## 3. Switch the plugin on — `POST /api/plugin-unlock`
+
+**Since 1.0.7.** The same route Essay Guard uses. Free for this plugin (0 credits). When `mark` or `converse` answers
+403 (other than `INSUFFICIENT_CREDITS`), Moodle sends:
+
+```json
+{"pluginId": "aispeakwrite", "siteId": "…", "apiKey": "…"}
+```
+
+with the usual `X-Site-ID` and `X-API-Key` headers. Expected answer: `200 {"unlocked": true}`, after which the site has
+a `plugin_unlocks` record for `aispeakwrite` and the same `mark`/`converse` request (same key, same body) is sent again
+once. Any other answer is treated as "not switched on"; Moodle tries again at most every ten minutes.
+
+## 4. Balance — `GET /api/credits?siteId=…`
 
 Already live. Moodle reads `isUnlimited` or `creditsRaw` (also `credits`, `creditsBalance`, `balance`).
