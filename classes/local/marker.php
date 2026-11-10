@@ -117,17 +117,16 @@ final class marker {
                 'points' => $points,
                 'formality' => (string)$task->formality,
                 'targetWords' => (int)$task->targetwords,
-                'markingInstructions' => (string)($task->markinginstructions ?? ''),
             ],
-            'tips' => array_map(
+            'tips' => array_merge(self::marking_tips((string)($task->markinginstructions ?? '')), array_map(
                 fn($t) => ['id' => $t['id'], 'name' => $t['name'], 'tip' => $t['tip'],
                 'example' => $t['example'],
                 'level' => $t['source']],
                 $merged['tips']
-            ),
+            )),
             'patterns' => tips::patterns($instance->targetlang),
-            'scoring' => ['criteria' => manager::CRITERIA, 'bands' => manager::BANDS, 'examScore' => true,
-                'maxPoints' => manager::criterion_max($instance)],
+            // The activity's own points are applied in Moodle (manager::scale_band), so only the bands are sent.
+            'scoring' => ['criteria' => manager::CRITERIA, 'bands' => manager::BANDS, 'examScore' => true],
             'options' => ['markGood' => (bool)$instance->showgood],
             'answer' => ['text' => self::answer_text($sub)],
         ];
@@ -159,6 +158,60 @@ final class marker {
             $body['history'] = memory::history((int)$instance->id, (int)$sub->userid);
         }
         return $body;
+    }
+
+    /** @var int Longest text LMS Labs accepts in one tip. */
+    public const TIPCHARS = 4000;
+
+    /**
+     * The teacher's marking instructions for a task, as tips at the start of the tips list.
+     *
+     * LMS Labs only accepts the fields in its contract, and its task has no field for marking instructions, so they
+     * travel as tips with their own ids (marking:1, marking:2 …), split at line ends into parts LMS Labs accepts.
+     * Moodle never shows them: feedback that cites these ids is dropped, because they aren't among the activity's tips.
+     *
+     * @param string $instructions
+     * @return array[] tips in the request format
+     */
+    public static function marking_tips(string $instructions): array {
+        $instructions = trim(\core_text::substr($instructions, 0, tips::MAXCHARS));
+        if ($instructions === '') {
+            return [];
+        }
+        $parts = [];
+        $part = '';
+        foreach (preg_split('/\R/u', $instructions) as $line) {
+            while (\core_text::strlen($line) > self::TIPCHARS) {
+                if ($part !== '') {
+                    $parts[] = $part;
+                    $part = '';
+                }
+                $parts[] = \core_text::substr($line, 0, self::TIPCHARS);
+                $line = \core_text::substr($line, self::TIPCHARS);
+            }
+            $next = $part === '' ? $line : $part . "\n" . $line;
+            if (\core_text::strlen($next) > self::TIPCHARS) {
+                $parts[] = $part;
+                $next = $line;
+            }
+            $part = $next;
+        }
+        if (trim($part) !== '') {
+            $parts[] = $part;
+        }
+        $out = [];
+        $n = count($parts);
+        foreach (array_values($parts) as $i => $text) {
+            $out[] = [
+                'id' => 'marking:' . ($i + 1),
+                'name' => 'Teacher\'s marking instructions for this task' . ($n > 1 ? ' (' . ($i + 1) . '/' . $n . ')' : '')
+                    . ': follow exactly when judging content points and scores; never quote or show to the learner',
+                'tip' => $text,
+                'example' => '',
+                'level' => 'task',
+            ];
+        }
+        return $out;
     }
 
     /**

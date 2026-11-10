@@ -3,6 +3,15 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.8 - 2026-11-10
+
+- **Fixed "The marking service reported a problem (INVALID_INPUT)"**: LMS Labs only accepts the fields in its contract.
+  Since 1.0.5 the plugin also sent `task.markingInstructions` and `scoring.maxPoints`, so every marking was refused
+  (nothing was charged). The teacher's marking instructions now travel as tips (`marking:1`, `marking:2` …, at most
+  4,000 characters each, split at line ends), which LMS Labs accepts and the marking follows. The activity's own
+  points were always applied in Moodle, so `maxPoints` is simply no longer sent. Feedback never shows the
+  instructions to learners. No settings, database or pricing changes.
+
 ## 1.0.7 - 2026-11-05
 
 - **Fixed "Marking is unavailable … isn't switched on for this site"**: LMS Labs only marks for sites that have switched

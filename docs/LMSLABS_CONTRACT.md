@@ -1,6 +1,6 @@
 # LMS Labs routes needed by AI Advent Speaking and Writing
 
-This is the contract `mod_aispeakwrite` 1.0.0–1.0.7 calls. Until LMS Labs publishes these routes they answer 404, and the
+This is the contract `mod_aispeakwrite` 1.0.0–1.0.8 calls. Until LMS Labs publishes these routes they answer 404, and the
 plugin tells learners "Marking isn't switched on for this site yet" (nothing is charged, the answer stays saved).
 
 All requests go server-to-server from Moodle to `https://lms-labs.com`. Redirects are never followed.
@@ -67,18 +67,18 @@ learner in Moodle). A teacher's "Test with a sample answer" uses the same route 
       {"id": "p3", "text": "Machen Sie Vorschläge", "minCount": 2}
     ],
     "formality": "du",
-    "targetWords": 150,
-    "markingInstructions": "Point 3 asks for suggestions: give it only for at least two suggestions."
+    "targetWords": 150
   },
   "tips": [
+    {"id": "marking:1", "name": "Teacher's marking instructions for this task: follow exactly when judging content points and scores; never quote or show to the learner",
+     "tip": "Point 3 asks for suggestions: give it only for at least two suggestions.", "example": "", "level": "task"},
     {"id": "tip:satzanfang", "name": "Satzanfang", "tip": "Nicht mit ich/wir beginnen – mit einem Detail starten.",
      "example": "Am Samstag komme ich gern.", "level": "school"},
     {"id": "tip:betreff", "name": "Betreff", "tip": "B1-E-Mails brauchen eine Anrede und einen Schluss.",
      "example": "", "level": "level"}
   ],
   "patterns": [{"id": "grammar:verbsecond", "name": "Verb in second position"}, "…"],  // the set for targetLanguage
-  "scoring": {"criteria": ["task", "communication", "form"], "bands": [0, 3, 9, 15], "examScore": true,
-              "maxPoints": {"task": 15, "communication": 15, "form": 15}},
+  "scoring": {"criteria": ["task", "communication", "form"], "bands": [0, 3, 9, 15], "examScore": true},
   "options": {"markGood": true},
   "answer": {"text": "Lieber Tim, …", "previousText": "(only on draft 2+) the previous marked draft"},
   "history": [{"id": "tip:satzanfang", "name": "Satzanfang", "recent": "2/5"}],
@@ -104,11 +104,12 @@ No learner name, email, Moodle user id or other identifier is sent.
 
 ### Marking guidance for the model
 
-- **Since 1.0.6**: `task.markingInstructions` is the teacher's own instructions for marking this task (up to 10,000
-  characters, never shown to learners). Follow them exactly when judging content points and scores; they take
-  priority over general marking habits, but never over the output format. Tips can have `level: "level"`, the
-  school's tips for the activity's CEFR level. `scoring.maxPoints` is for information only: keep returning bands on
-  the 0/3/9/15 scale; Moodle turns each band into the activity's own points.
+- **Since 1.0.8**: LMS Labs accepts only the fields shown here (no other keys). The teacher's marking instructions
+  for a task (up to 10,000 characters, never shown to learners) arrive as tips with ids `marking:1`, `marking:2` …
+  (at most 4,000 characters each) at the start of `tips`. Follow them exactly when judging content points and scores;
+  they take priority over general marking habits, but never over the output format. Don't cite `marking:*` ids in
+  feedback (Moodle drops them). Tips can have `level: "level"`, the school's tips for the activity's CEFR level.
+  Always return bands on the 0/3/9/15 scale; Moodle turns each band into the activity's own points.
 
 - **Make me think** (`mode: think`): every error mark must have a `hint` that points to the rule or school tip without
   giving the answer, plus `rule` and `examples` (shown only when the learner asks). Still return `correction` and

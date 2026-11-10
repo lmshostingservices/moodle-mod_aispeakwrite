@@ -158,9 +158,10 @@ final class clientfeedback_test extends \advanced_testcase {
     }
 
     /**
-     * The task's marking instructions and the criterion points are sent with the marking.
+     * The request holds only fields LMS Labs accepts: the marking instructions travel as tips, the activity's own
+     * points stay in Moodle, and long instructions are split into parts LMS Labs accepts.
      */
-    public function test_body_sends_instructions_and_points(): void {
+    public function test_body_fits_lms_labs_contract(): void {
         $this->resetAfterTest();
         $instance = (object)['id' => 1, 'examlevel' => 'B1', 'targetlang' => 'de-DE', 'feedbacklang' => 'en',
             'showgood' => 1, 'sendhistory' => 0, 'maxtask' => 20, 'maxcommunication' => 15, 'maxform' => 10];
@@ -168,11 +169,43 @@ final class clientfeedback_test extends \advanced_testcase {
             'points' => 'Machen Sie Vorschläge | 2', 'formality' => 'du', 'targetwords' => 150,
             'markinginstructions' => 'Point 1 needs at least two suggestions.'];
         $sub = (object)['kind' => 'writing', 'fbmode' => 'think', 'attempt' => 1, 'content' => 'Hallo'];
-        $body = marker::body($instance, $task, $sub, ['tips' => []]);
-        $this->assertSame('Point 1 needs at least two suggestions.', $body['task']['markingInstructions']);
-        $this->assertSame(2, $body['task']['points'][0]['minCount']);
-        $this->assertSame(['task' => 20, 'communication' => 15, 'form' => 10], $body['scoring']['maxPoints']);
+        $school = ['id' => 'tip:betreff', 'name' => 'Betreff', 'tip' => 'Anrede und Schluss.', 'example' => '',
+            'source' => 'school'];
+        $body = marker::body($instance, $task, $sub, ['tips' => [$school]]);
+        $this->assertSame(
+            ['title', 'situation', 'sourceText', 'points', 'formality', 'targetWords'],
+            array_keys($body['task'])
+        );
+        $this->assertSame(['criteria', 'bands', 'examScore'], array_keys($body['scoring']));
         $this->assertSame([0, 3, 9, 15], $body['scoring']['bands']);
+        $this->assertSame(2, $body['task']['points'][0]['minCount']);
+        $this->assertCount(2, $body['tips']);
+        $this->assertSame('marking:1', $body['tips'][0]['id']);
+        $this->assertSame('Point 1 needs at least two suggestions.', $body['tips'][0]['tip']);
+        $this->assertSame('task', $body['tips'][0]['level']);
+        $this->assertSame(['id', 'name', 'tip', 'example', 'level'], array_keys($body['tips'][0]));
+        $this->assertSame('tip:betreff', $body['tips'][1]['id']);
+
+        // 10,000 characters of instructions: three parts, none over 4,000 characters, nothing lost.
+        $lines = [];
+        for ($i = 1; $i <= 200; $i++) {
+            $lines[] = str_pad('Rule ' . $i . ': ', 49, 'x');
+        }
+        $long = implode("\n", $lines);
+        $tips = marker::marking_tips($long);
+        $this->assertCount(3, $tips);
+        foreach ($tips as $t) {
+            $this->assertLessThanOrEqual(marker::TIPCHARS, \core_text::strlen($t['tip']));
+            $this->assertLessThanOrEqual(300, \core_text::strlen($t['name']));
+        }
+        $this->assertSame($long, implode("\n", array_column($tips, 'tip')));
+        $this->assertSame([], marker::marking_tips('  '));
+
+        // Feedback that cites the instructions is dropped, so learners never see them.
+        $fb = marker::normalise(['summary' => 'S', 'criteria' => [], 'marks' => [
+            ['type' => 'error', 'text' => 'Hallo', 'correction' => 'Hallo!', 'ruleId' => 'marking:1'],
+        ]], 'Hallo', $task, [$school], 'de-DE');
+        $this->assertSame('', $fb['marks'][0]['ruleid'] ?? '');
     }
 
     /**
