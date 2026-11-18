@@ -1415,3 +1415,26 @@
         order: 4;
     }
 }
+
+
+/* 1.0.10: feedback notes in a wide box under the answer (rows of notes), not a tall side column. */
+.asw-fbstack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.asw-notesbox {
+    min-width: 0;
+}
+
+.asw-notesgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+    align-items: start;
+}
+
+.asw-notesgrid .asw-note {
+    height: 100%;
+}

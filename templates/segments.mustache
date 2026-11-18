@@ -28,4 +28,4 @@
         ]
     }
 }}
-{{#segments}}{{#plain}}{{text}}{{/plain}}{{#mark}}<button type="button" class="asw-mark asw-mark--{{kind}}" data-mark="{{id}}" aria-describedby="asw-note-{{id}}">{{#showcorrection}}<s>{{text}}</s> <ins>{{correction}}</ins>{{/showcorrection}}{{^showcorrection}}{{text}}{{/showcorrection}}{{#error}}<sup class="asw-ref">{{n}}</sup>{{/error}}</button>{{/mark}}{{/segments}}
+{{#segments}}{{#plain}}{{text}}{{/plain}}{{#mark}}<button type="button" class="asw-mark asw-mark--{{kind}}" data-mark="{{id}}" aria-describedby="asw-note-{{id}}">{{#showcorrection}}<s>{{text}}</s>{{#correction}} <ins>{{correction}}</ins>{{/correction}}{{/showcorrection}}{{^showcorrection}}{{text}}{{/showcorrection}}{{#error}}<sup class="asw-ref">{{n}}</sup>{{/error}}</button>{{/mark}}{{/segments}}

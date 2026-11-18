@@ -856,20 +856,134 @@ final class views {
             if ($m['start'] > $pos) {
                 $out[] = ['plain' => true, 'text' => \core_text::substr($text, $pos, $m['start'] - $pos)];
             }
-            $out[] = [
-                'mark' => true,
-                'id' => $m['id'],
-                'n' => $m['n'],
-                'text' => \core_text::substr($text, $m['start'], $m['end'] - $m['start']),
-                'correction' => $think ? '' : $m['correction'],
-                'showcorrection' => !$think && $m['type'] === 'error' && $m['correction'] !== '',
-                'kind' => $m['type'] === 'error' && $m['severity'] === 'unclear' ? 'unclear' : $m['type'],
-                'error' => $m['type'] === 'error',
-            ];
+            $marktext = \core_text::substr($text, $m['start'], $m['end'] - $m['start']);
+            $kind = $m['type'] === 'error' && $m['severity'] === 'unclear' ? 'unclear' : $m['type'];
+            $pieces = $m['type'] === 'error' ? self::narrow($marktext, (string)$m['correction']) : [];
+            if (!$pieces) {
+                $pieces = [[0, \core_text::strlen($marktext), (string)$m['correction']]];
+            }
+            $at = 0;
+            $last = count($pieces) - 1;
+            foreach ($pieces as $k => [$start, $end, $fix]) {
+                if ($start > $at) {
+                    $out[] = ['plain' => true, 'text' => \core_text::substr($marktext, $at, $start - $at)];
+                }
+                $out[] = [
+                    'mark' => true,
+                    'id' => $m['id'],
+                    'n' => $m['n'],
+                    'text' => \core_text::substr($marktext, $start, $end - $start),
+                    'correction' => $think ? '' : $fix,
+                    'showcorrection' => !$think && $m['type'] === 'error' && $m['correction'] !== '',
+                    'kind' => $kind,
+                    'error' => $m['type'] === 'error' && $k === $last,
+                ];
+                $at = $end;
+            }
+            if ($at < \core_text::strlen($marktext)) {
+                $out[] = ['plain' => true, 'text' => \core_text::substr($marktext, $at)];
+            }
             $pos = $m['end'];
         }
         if ($pos < $to) {
             $out[] = ['plain' => true, 'text' => \core_text::substr($text, $pos, $to - $pos)];
+        }
+        return $out;
+    }
+
+    /**
+     * The words of a marked passage that its correction changes, so only those are underlined.
+     *
+     * The AI often marks a whole sentence for one wrong word. Comparing the passage with its correction word by word
+     * finds the changed words; changes one word apart are joined into one unit. Nothing is narrowed for short marks
+     * (up to 3 words), or when most of the passage changes (a rewrite of the whole sentence).
+     *
+     * @param string $text the marked passage
+     * @param string $correction its correction
+     * @return array[] [start, end, correction] character offsets into $text, or [] to keep the whole mark
+     */
+    public static function narrow(string $text, string $correction): array {
+        $words = fn(string $s) => preg_match_all('/[\p{L}\p{N}\p{M}][\p{L}\p{N}\p{M}\'’-]*/u', $s, $m, PREG_OFFSET_CAPTURE)
+            ? array_map(fn($w) => [$w[0], \core_text::strlen(substr($s, 0, $w[1]))], $m[0]) : [];
+        $a = $words($text);
+        $b = $words($correction);
+        $n = count($a);
+        $nb = count($b);
+        if ($n < 4 || $nb === 0 || trim($correction) === '' || $n * $nb > 40000) {
+            return [];
+        }
+        // Longest common subsequence of the words.
+        $lcs = array_fill(0, $n + 1, array_fill(0, $nb + 1, 0));
+        for ($i = $n - 1; $i >= 0; $i--) {
+            for ($j = $nb - 1; $j >= 0; $j--) {
+                $lcs[$i][$j] = $a[$i][0] === $b[$j][0] ? $lcs[$i + 1][$j + 1] + 1 : max($lcs[$i + 1][$j], $lcs[$i][$j + 1]);
+            }
+        }
+        // Changed runs: [i1, i2, j1, j2] (words a[i1..i2) became b[j1..j2)).
+        $chunks = [];
+        $i = $j = 0;
+        $open = null;
+        while ($i < $n || $j < $nb) {
+            if ($i < $n && $j < $nb && $a[$i][0] === $b[$j][0]) {
+                if ($open) {
+                    $chunks[] = $open;
+                    $open = null;
+                }
+                $i++;
+                $j++;
+                continue;
+            }
+            $open = $open ?? [$i, $i, $j, $j];
+            if ($j < $nb && ($i >= $n || $lcs[$i][$j + 1] >= $lcs[$i + 1][$j])) {
+                $j++;
+                $open[3] = $j;
+            } else {
+                $i++;
+                $open[1] = $i;
+            }
+        }
+        if ($open) {
+            $chunks[] = $open;
+        }
+        if (!$chunks) {
+            return [];
+        }
+        // An insertion is shown on the word before it (or after it, at the start).
+        foreach ($chunks as &$c) {
+            if ($c[0] === $c[1]) {
+                if ($c[0] > 0) {
+                    $c[0]--;
+                    $c[2]--;
+                } else {
+                    $c[1]++;
+                    $c[3]++;
+                }
+            }
+        }
+        unset($c);
+        // Join changes that are at most one word apart into one unit.
+        $merged = [];
+        foreach ($chunks as $c) {
+            $prev = count($merged) - 1;
+            if ($prev >= 0 && $c[0] - $merged[$prev][1] <= 1) {
+                $merged[$prev][1] = max($merged[$prev][1], $c[1]);
+                $merged[$prev][3] = max($merged[$prev][3], $c[3]);
+            } else {
+                $merged[] = $c;
+            }
+        }
+        $changed = array_sum(array_map(fn($c) => $c[1] - $c[0], $merged));
+        if ($changed > 0.7 * $n) {
+            return [];
+        }
+        $out = [];
+        foreach ($merged as [$i1, $i2, $j1, $j2]) {
+            $start = $a[$i1][1];
+            $end = $a[$i2 - 1][1] + \core_text::strlen($a[$i2 - 1][0]);
+            $fix = $j2 > $j1
+                ? \core_text::substr($correction, $b[$j1][1], $b[$j2 - 1][1] + \core_text::strlen($b[$j2 - 1][0]) - $b[$j1][1])
+                : '';
+            $out[] = [$start, $end, $fix];
         }
         return $out;
     }

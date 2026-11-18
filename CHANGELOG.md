@@ -3,6 +3,26 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.10 - 2026-11-17
+
+- **Feedback notes under the answer**: the notes for each mark now sit in a wide box below the learner's text, in
+  rows, instead of a tall column beside it, so there is far less scrolling (Advent Training Group's feedback).
+- **Only the wrong words are underlined**: when the AI marks a whole sentence for one or two mistakes, Moodle compares
+  it with the correction and underlines only the words that change (for example "tun" and "deine Nachbarn" instead of
+  the whole sentence), all linked to the same note. Short marks and full rewrites stay whole. In "Explain" mode each
+  underlined part shows its own correction.
+- No settings, database or pricing changes.
+
+## 1.0.9 - 2026-11-16
+
+- **No more "Still marking. Try again…" for learners**: a marking takes about half a minute at LMS Labs, which answers
+  "still working" (202) after about 20 seconds. Moodle now waits and collects the result itself (same request, same
+  key, charged once), so learners get their feedback from one click.
+- **Fixed: "Test with a sample answer" could be charged more than once.** Clicking again while a sample was still
+  being marked started a new marking instead of collecting the first one. The same sample for the same task now
+  picks up the marking already in progress.
+- No settings, database or pricing changes.
+
 ## 1.0.8 - 2026-11-10
 
 - **Fixed "The marking service reported a problem (INVALID_INPUT)"**: LMS Labs only accepts the fields in its contract.

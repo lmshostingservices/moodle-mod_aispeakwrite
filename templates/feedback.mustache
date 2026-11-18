@@ -116,7 +116,7 @@
     </div>
     {{/own}}{{/think}}
 
-    <div class="asw-row">
+    <div class="asw-fbstack">
         <section class="asw-card asw-card--flush asw-main">
             <div class="asw-card__head">
                 <strong>{{#writing}}{{#str}}youranswer, mod_aispeakwrite{{/str}}{{/writing}}{{#speaking}}{{#str}}transcript, mod_aispeakwrite{{/str}}{{/speaking}}</strong>
@@ -149,9 +149,10 @@
             {{#canrewrite}}<div class="asw-sub" style="padding: 0 22px 16px;">{{#str}}nextdraftmode, mod_aispeakwrite, {{nextmode}}{{/str}}</div>{{/canrewrite}}
         </section>
 
-        <aside class="asw-side" aria-label="{{#str}}feedbacknotes, mod_aispeakwrite{{/str}}">
+        <section class="asw-card asw-notesbox" aria-label="{{#str}}feedbacknotes, mod_aispeakwrite{{/str}}">
             <span class="asw-label">{{#str}}tapamark, mod_aispeakwrite{{/str}}</span>
             {{^hasnotes}}<p class="asw-sub">{{#str}}nomarks, mod_aispeakwrite{{/str}}</p>{{/hasnotes}}
+            <div class="asw-notesgrid">
             {{#notes}}
                 <div class="asw-note" id="asw-note-{{id}}" data-note="{{id}}">
                     <button type="button" class="asw-note__btn" data-select="{{id}}">
@@ -194,7 +195,8 @@
                     {{#memory}}<span class="asw-note__memory">{{memory}}</span>{{/memory}}
                 </div>
             {{/notes}}
-        </aside>
+            </div>
+        </section>
     </div>
 
     {{#speaking}}

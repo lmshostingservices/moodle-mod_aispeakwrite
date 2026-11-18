@@ -45,11 +45,11 @@ export const init = (selector) => {
 
     const select = (id, scroll) => {
         root.querySelectorAll('.asw-is-selected').forEach((el) => el.classList.remove('asw-is-selected'));
-        const mark = root.querySelector('[data-mark="' + id + '"]');
+        // A mark can be split into several underlined words; select them all.
+        const marks = root.querySelectorAll('[data-mark="' + id + '"]');
+        const mark = marks.length ? marks[0] : null;
         const note = root.querySelector('[data-note="' + id + '"]');
-        if (mark) {
-            mark.classList.add('asw-is-selected');
-        }
+        marks.forEach((el) => el.classList.add('asw-is-selected'));
         if (note) {
             note.classList.add('asw-is-selected');
         }

@@ -47,6 +47,7 @@ final class charging_test extends \advanced_testcase {
 
     protected function tearDown(): void {
         remote::$transport = null;
+        remote::$sleeper = null;
         credentials::$central = null;
         parent::tearDown();
     }
@@ -198,6 +199,30 @@ final class charging_test extends \advanced_testcase {
         $this->assertSame('marked', $marked->status);
         $keys = array_map(fn($c) => array_values(preg_grep('/^Idempotency-Key:/', $c['headers']))[0], $this->calls);
         $this->assertNotEquals($keys[0], $keys[1]);
+    }
+
+    /**
+     * LMS Labs is still working (202): Moodle waits and asks again with the same key and body until the result is
+     * ready, so the learner gets feedback in one click and is charged once.
+     */
+    public function test_pending_is_collected_without_a_second_click(): void {
+        [$instance, $task, $user, $context] = $this->setup_activity();
+        $waits = [];
+        remote::$sleeper = function (int $s) use (&$waits) {
+            $waits[] = $s;
+        };
+        $pending = [202, json_encode(['status' => 'pending']), [], ['retry-after' => '4']];
+        $this->answers = [$pending, $pending, $this->delivered()];
+        $marked = marker::mark($instance, $task, $this->draft($instance, $task, $user), $context);
+        remote::$sleeper = null;
+        $this->assertSame('marked', $marked->status);
+        $this->assertCount(3, $this->calls);
+        $this->assertSame([4, 4], $waits);
+        $key = fn($h) => array_values(array_filter($h, fn($l) => str_starts_with($l, 'Idempotency-Key:')));
+        foreach ([1, 2] as $i) {
+            $this->assertSame($this->calls[0]['body'], $this->calls[$i]['body']);
+            $this->assertSame($key($this->calls[0]['headers']), $key($this->calls[$i]['headers']));
+        }
     }
 
     /**

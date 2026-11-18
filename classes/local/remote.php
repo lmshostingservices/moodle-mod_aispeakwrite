@@ -62,6 +62,14 @@ final class remote {
     public static $transport = null;
 
     /**
+     * @var callable|null Replacement for sleep() in unit tests: fn(int $seconds).
+     */
+    public static $sleeper = null;
+
+    /** @var int Longest time (seconds) Moodle keeps asking for a marking LMS Labs is still working on. */
+    public const PENDINGWAIT = 50;
+
+    /**
      * Sends one request.
      *
      * @param string $path route on the fixed host
@@ -72,6 +80,7 @@ final class remote {
      * @throws \moodle_exception remoteuncertain when no answer arrived
      */
     public static function request(string $path, ?array $body = null, string $key = '', int $timeout = 60): array {
+        $started = time();
         $answer = self::send($path, $body, $key, $timeout);
         // LMS Labs refuses a site that hasn't switched this plugin on yet (403 NO_ENTITLEMENT). Switching it on is
         // free for this plugin, so do it once and send the same request again, with the same key and body. The
@@ -80,6 +89,20 @@ final class remote {
             if (self::unlock()) {
                 $answer = self::send($path, $body, $key, $timeout);
             }
+        }
+        // A marking takes about half a minute. LMS Labs answers 202 while it is still working and keeps the result
+        // under the Idempotency-Key, so ask again with the same key and body (never charged twice) until it is
+        // ready, instead of making the learner click again.
+        // The whole wait stays under a minute (from the first send), inside common web-server time limits.
+        while ($answer[0] === 202 && $path === self::MARK && time() - $started < self::PENDINGWAIT) {
+            $wait = max(1, min(10, (int)($answer[3]['retry-after'] ?? 3)));
+            if (self::$sleeper !== null) {
+                (self::$sleeper)($wait);
+            } else {
+                \core_php_time_limit::raise(120);
+                sleep($wait);
+            }
+            $answer = self::send($path, $body, $key, $timeout);
         }
         return $answer;
     }

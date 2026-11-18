@@ -228,4 +228,41 @@ final class clientfeedback_test extends \advanced_testcase {
         $texts = array_map(fn($k) => get_string($k, 'mod_aispeakwrite'), $keys);
         $this->assertCount(3, array_unique($texts));
     }
+
+    /**
+     * A whole-sentence mark is underlined only on the words its correction changes (client feedback, 1.0.10).
+     */
+    public function test_marks_are_narrowed_to_the_changed_words(): void {
+        $p = \mod_aispeakwrite\output\views::narrow(
+            'es tun mir leid, dass du haben Probleme mit deine Nachbarn.',
+            'es tut mir leid, dass du Probleme mit deinen Nachbarn hast.'
+        );
+        $text = 'es tun mir leid, dass du haben Probleme mit deine Nachbarn.';
+        $spans = array_map(fn($x) => [\core_text::substr($text, $x[0], $x[1] - $x[0]), $x[2]], $p);
+        $this->assertSame([['tun', 'tut'], ['haben', ''], ['deine Nachbarn', 'deinen Nachbarn hast']], $spans);
+        $this->assertSame(
+            [[3, 7, 'meiner'], [34, 39, 'laute']],
+            \mod_aispeakwrite\output\views::narrow(
+                'In mein alten Wohnung gab es auch latue Kinder',
+                'In meiner alten Wohnung gab es auch laute Kinder'
+            )
+        );
+        // Short marks and full rewrites stay whole.
+        $this->assertSame([], \mod_aispeakwrite\output\views::narrow('den Einladung', 'die Einladung'));
+        $this->assertSame([], \mod_aispeakwrite\output\views::narrow(
+            'Ich gehen gestern in Schule mit mein Freund',
+            'Gestern bin ich mit meinem Freund zur Schule gegangen'
+        ));
+
+        // On the page: one note, three underlined pieces, the number on the last piece only.
+        $marks = [['id' => 'm1', 'n' => 1, 'start' => 0, 'end' => \core_text::strlen($text), 'type' => 'error',
+            'severity' => 'major', 'correction' => 'es tut mir leid, dass du Probleme mit deinen Nachbarn hast.']];
+        $paras = \mod_aispeakwrite\output\views::paragraphs($text, $marks, true);
+        $marked = array_values(array_filter($paras[0]['segments'], fn($s) => !empty($s['mark'])));
+        $this->assertSame(['tun', 'haben', 'deine Nachbarn'], array_column($marked, 'text'));
+        $this->assertSame([false, false, true], array_column($marked, 'error'));
+        $this->assertSame(['', '', ''], array_column($marked, 'correction'), 'Make me think hides corrections');
+        $joined = implode('', array_column($paras[0]['segments'], 'text'));
+        $this->assertSame($text, $joined, 'No text is lost or repeated');
+    }
 }

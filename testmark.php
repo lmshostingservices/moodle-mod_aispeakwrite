@@ -64,7 +64,10 @@ if ($text !== '' && confirm_sesskey()) {
         }
         $body = marker::body($instance, $task, $sub, $merged);
         $body['test'] = true;
-        $op = operation::claim((int)$instance->id, (int)$USER->id, 'test', random_int(1, 2000000000), $body);
+        // The same sample for the same task picks up a marking LMS Labs is still working on (same key, never charged
+        // twice); a different sample or mode is a new marking.
+        $sample = (int)sprintf('%u', crc32($task->id . '|' . $body['mode'] . '|' . $body['answer']['text'])) % 2000000000 + 1;
+        $op = operation::claim((int)$instance->id, (int)$USER->id, 'test', $sample, $body);
         [$status, $response, , $headers] = remote::request(remote::MARK, operation::body($op), $op->idemkey);
         if ($status !== 200) {
             operation::not_delivered($op, $status, $response, $headers);
