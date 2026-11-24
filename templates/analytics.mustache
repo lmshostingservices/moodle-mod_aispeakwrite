@@ -112,6 +112,34 @@
     </section>
     {{/hasgrid}}
 
+    {{#hasstuck}}
+    <section class="asw-card" id="asw-stuck" data-region="stuck">
+        <div class="asw-row asw-row--between" style="align-items: center;">
+            <h3 class="asw-h2">{{#str}}stuck_title, mod_aispeakwrite{{/str}}</h3>
+            <span class="asw-pill asw-pill--warn">{{stuckcount}}</span>
+        </div>
+        <span class="asw-sub">{{#str}}stuck_desc, mod_aispeakwrite{{/str}}</span>
+        <div class="asw-scroll">
+            <table class="asw-table">
+                <thead><tr>
+                    <th scope="col">{{#str}}learner, mod_aispeakwrite{{/str}}</th>
+                    <th scope="col">{{#str}}integrity_task, mod_aispeakwrite{{/str}}</th>
+                    <th scope="col">{{#str}}stuck_since, mod_aispeakwrite{{/str}}</th>
+                    <th scope="col"><span class="sr-only">{{#str}}stuck_clear, mod_aispeakwrite{{/str}}</span></th>
+                </tr></thead>
+                <tbody>
+                    {{#stuck}}<tr>
+                        <th scope="row">{{name}}</th>
+                        <td>{{task}} · {{draft}}</td>
+                        <td>{{since}}</td>
+                        <td>{{#clearurl}}<form method="post" action="{{clearurl}}"><input type="hidden" name="sesskey" value="{{sesskey}}"><button type="submit" class="asw-btn asw-btn--ink">{{#str}}stuck_clear, mod_aispeakwrite{{/str}}</button></form>{{/clearurl}}</td>
+                    </tr>{{/stuck}}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {{/hasstuck}}
+
     <section class="asw-card" id="asw-integrity" data-region="integrityflags">
         <div class="asw-row asw-row--between" style="align-items: center;">
             <h3 class="asw-h2">{{#str}}integrity_flags, mod_aispeakwrite{{/str}}</h3>

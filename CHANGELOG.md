@@ -3,6 +3,17 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.0.11 - 2026-11-24
+
+- **Fixed: learners could be stuck on "This answer is still being marked".** When a marking never got a result,
+  "Check again" kept re-sending the same request and the answer stayed locked for up to seven days. Now:
+  - After 3 minutes with no result, the learner sees **Cancel and resubmit**. Their text stays in the box and they
+    can submit it again (a new request).
+  - **Class analytics** lists answers stuck being marked, with a **Clear** button for teachers who manage tasks.
+  - The clean-up task now runs every 15 minutes and releases anything still waiting after 30 minutes (was daily, after
+    seven days).
+- New strings in all 18 interface languages. No settings, database or pricing changes.
+
 ## 1.0.10 - 2026-11-17
 
 - **Feedback notes under the answer**: the notes for each mark now sit in a wide box below the learner's text, in

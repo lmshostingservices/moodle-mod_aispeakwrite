@@ -18,6 +18,7 @@ namespace mod_aispeakwrite;
 
 use mod_aispeakwrite\local\credentials;
 use mod_aispeakwrite\local\marker;
+use mod_aispeakwrite\local\operation;
 use mod_aispeakwrite\local\remote;
 use mod_aispeakwrite\local\submissions;
 
@@ -30,10 +31,12 @@ use mod_aispeakwrite\local\submissions;
  * @covers     \mod_aispeakwrite\local\marker
  * @covers     \mod_aispeakwrite\local\operation
  * @covers     \mod_aispeakwrite\local\remote
+ * @covers     \mod_aispeakwrite\task\cleanup
  */
 #[\PHPUnit\Framework\Attributes\CoversClass(\mod_aispeakwrite\local\marker::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\mod_aispeakwrite\local\operation::class)]
 #[\PHPUnit\Framework\Attributes\CoversClass(\mod_aispeakwrite\local\remote::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\mod_aispeakwrite\task\cleanup::class)]
 final class charging_test extends \advanced_testcase {
     /** @var array Requests the fake LMS Labs received. */
     private array $calls = [];
@@ -311,6 +314,72 @@ final class charging_test extends \advanced_testcase {
         $this->assertCount(1, array_unique($keys));
         $this->assertCount(1, array_unique(array_column($this->calls, 'body')));
         $this->assertSame(1, $DB->count_records('aispeakwrite_op'));
+    }
+
+    /**
+     * A marking with no result can be cancelled after a few minutes; the text stays and the next try is a new request.
+     */
+    public function test_stuck_marking_can_be_cancelled(): void {
+        global $DB;
+        [$instance, $task, $user, $context] = $this->setup_activity();
+        $this->answers = [new \moodle_exception('remoteuncertain', 'mod_aispeakwrite'), $this->delivered()];
+        $sub = $this->draft($instance, $task, $user);
+        try {
+            marker::mark($instance, $task, $sub, $context);
+            $this->fail('Expected no definite answer');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('remoteuncertain', $e->errorcode);
+        }
+        $sub = submissions::get((int)$sub->id, (int)$instance->id);
+        $this->assertSame('pending', $sub->status);
+
+        // Not yet: the marking only just started.
+        $this->assertFalse(operation::cancellable($sub));
+
+        // Three minutes later it can be cancelled.
+        $DB->set_field('aispeakwrite_op', 'timecreated', time() - operation::STALE - 1, ['itemid' => $sub->id]);
+        $this->assertTrue(operation::cancellable($sub));
+        $this->assertSame(1, operation::release_submission((int)$sub->id));
+
+        $sub = submissions::get((int)$sub->id, (int)$instance->id);
+        $this->assertSame('draft', $sub->status);
+        $this->assertSame(self::TEXT, $sub->content);
+        $op = $DB->get_record('aispeakwrite_op', ['itemid' => $sub->id]);
+        $this->assertSame('expired', $op->state);
+        $this->assertSame('', (string)$op->body);
+
+        // Submitting again sends a new request, which is delivered.
+        $marked = marker::mark($instance, $task, $sub, $context);
+        $this->assertSame('marked', $marked->status);
+        $keys = array_map(fn($c) => array_values(preg_grep('/^Idempotency-Key:/', $c['headers']))[0], $this->calls);
+        $this->assertCount(2, array_unique($keys));
+    }
+
+    /**
+     * The clean-up task ends requests with no result after 30 minutes and gives the learner their draft back.
+     */
+    public function test_cleanup_releases_stuck_marking(): void {
+        global $DB;
+        [$instance, $task, $user, $context] = $this->setup_activity();
+        $this->answers = [new \moodle_exception('remoteuncertain', 'mod_aispeakwrite')];
+        $sub = $this->draft($instance, $task, $user);
+        try {
+            marker::mark($instance, $task, $sub, $context);
+        } catch (\moodle_exception $e) {
+            $this->assertSame('remoteuncertain', $e->errorcode);
+        }
+        $task1 = new \mod_aispeakwrite\task\cleanup();
+        ob_start();
+        $task1->execute();
+        ob_end_clean();
+        $this->assertSame('pending', $DB->get_field('aispeakwrite_sub', 'status', ['id' => $sub->id]));
+
+        $DB->set_field('aispeakwrite_op', 'timecreated', time() - \mod_aispeakwrite\task\cleanup::MAXAGE - 1);
+        ob_start();
+        $task1->execute();
+        ob_end_clean();
+        $this->assertSame('draft', $DB->get_field('aispeakwrite_sub', 'status', ['id' => $sub->id]));
+        $this->assertSame('expired', $DB->get_field('aispeakwrite_op', 'state', ['itemid' => $sub->id]));
     }
 
     /**

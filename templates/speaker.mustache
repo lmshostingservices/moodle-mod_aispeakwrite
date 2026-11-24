@@ -55,7 +55,14 @@
 
         <section class="asw-card asw-stage asw-main" data-region="stage">
             <div class="asw-banner asw-banner--bad asw-hidden" data-region="unsupported" style="width: 100%;">{{#str}}browserunsupported, mod_aispeakwrite{{/str}}</div>
-            {{#pending}}<div class="asw-banner asw-banner--info" style="width: 100%;">{{#str}}stillmarking, mod_aispeakwrite{{/str}}</div>{{/pending}}
+            {{#pending}}<div class="asw-banner asw-banner--info" style="width: 100%;">{{#str}}stillmarking, mod_aispeakwrite{{/str}}
+        {{#cancelurl}}<form method="post" action="{{cancelurl}}" class="asw-stuckform">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <span>{{#str}}stuckhelp, mod_aispeakwrite{{/str}}</span>
+            <button type="submit" class="asw-btn asw-btn--ink">{{#str}}cancelresubmit, mod_aispeakwrite{{/str}}</button>
+        </form>{{/cancelurl}}
+        {{^cancelurl}}<span class="asw-stuckwait">{{#str}}stuckwait, mod_aispeakwrite{{/str}}</span>{{/cancelurl}}
+    </div>{{/pending}}
 
             <div data-region="setup" style="width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 18px;">
                 <div class="asw-card" style="box-shadow: none; background: var(--asw-soft-2);">

@@ -20,6 +20,7 @@ use mod_aispeakwrite\local\integrity;
 use mod_aispeakwrite\local\manager;
 use mod_aispeakwrite\local\memory;
 use mod_aispeakwrite\local\marker;
+use mod_aispeakwrite\local\operation;
 use mod_aispeakwrite\local\submissions;
 use mod_aispeakwrite\local\tips;
 
@@ -502,6 +503,8 @@ final class views {
                 'notes' => (string)$sub->notes,
                 'words' => manager::words((string)$sub->content),
                 'pending' => $sub->status === 'pending',
+                'cancelurl' => self::cancel_url($cm, $sub),
+                'sesskey' => sesskey(),
                 'draftn' => get_string('draftn', self::P, $sub->attempt),
                 'modelabel' => get_string('fbmode_' . $sub->fbmode, self::P),
                 'modeexplain' => get_string('fbmode_' . $sub->fbmode . '_desc', self::P),
@@ -531,6 +534,20 @@ final class views {
                 'pastenotice' => get_string('pastenotice_' . integrity::paste_mode($instance), self::P),
             ]
         );
+    }
+
+    /**
+     * Where a learner cancels an answer that is stuck being marked, or '' while it can't be cancelled yet.
+     *
+     * @param \cm_info|\stdClass $cm
+     * @param \stdClass $sub
+     * @return string
+     */
+    protected static function cancel_url($cm, \stdClass $sub): string {
+        if (!operation::cancellable($sub)) {
+            return '';
+        }
+        return (new \moodle_url('/mod/aispeakwrite/unstick.php', ['id' => $cm->id, 'sub' => $sub->id]))->out(false);
     }
 
     /**
@@ -572,6 +589,8 @@ final class views {
                 'subid' => $sub->id,
                 'lang' => $instance->targetlang,
                 'pending' => $sub->status === 'pending',
+                'cancelurl' => self::cancel_url($cm, $sub),
+                'sesskey' => sesskey(),
                 'tipline' => (string)(implode(' · ', array_slice(array_column($merged['tips'], 'name'), 0, 4))),
                 'hastips' => !empty($merged['tips']),
                 'conversation' => $conversation,

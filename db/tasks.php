@@ -28,8 +28,8 @@ $tasks = [
     [
         'classname' => \mod_aispeakwrite\task\cleanup::class,
         'blocking' => 0,
-        'minute' => 'R',
-        'hour' => '3',
+        'minute' => '*/15',
+        'hour' => '*',
         'day' => '*',
         'month' => '*',
         'dayofweek' => '*',

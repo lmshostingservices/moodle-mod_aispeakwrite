@@ -31,6 +31,74 @@ final class operation {
     /** @var string Table name. */
     public const TABLE = 'aispeakwrite_op';
 
+    /** @var int Seconds after which a request that hasn't finished can be cancelled by the learner or a teacher. */
+    public const STALE = 3 * MINSECS;
+
+    /**
+     * When a submission's marking started: its oldest open request, or 0 when it has none.
+     *
+     * @param int $subid
+     * @return int
+     */
+    public static function started(int $subid): int {
+        global $DB;
+        return (int)$DB->get_field_select(
+            self::TABLE,
+            'MIN(timecreated)',
+            "itemid = :subid AND kind IN ('mark', 'converse') AND state = 'pending'",
+            ['subid' => $subid]
+        );
+    }
+
+    /**
+     * Whether a submission is stuck being marked: pending, and its request has had no result for STALE seconds
+     * (or there is no open request at all).
+     *
+     * @param \stdClass $sub
+     * @return bool
+     */
+    public static function cancellable(\stdClass $sub): bool {
+        if ($sub->status !== 'pending') {
+            return false;
+        }
+        $started = self::started((int)$sub->id);
+        return $started === 0 || $started <= time() - self::STALE;
+    }
+
+    /**
+     * Ends a submission's open requests and makes the answer a draft again, so it can be submitted afresh.
+     *
+     * The learner's text is kept. A new submission gets a new request with a new key.
+     *
+     * @param int $subid
+     * @return int number of requests ended
+     */
+    public static function release_submission(int $subid): int {
+        global $DB;
+        $ops = $DB->get_records_select(
+            self::TABLE,
+            "itemid = :subid AND kind IN ('mark', 'converse') AND state = 'pending'",
+            ['subid' => $subid],
+            '',
+            'id'
+        );
+        $now = time();
+        foreach ($ops as $op) {
+            $DB->update_record(
+                self::TABLE,
+                (object)['id' => $op->id, 'state' => 'expired', 'body' => '', 'timemodified' => $now]
+            );
+        }
+        $DB->set_field_select(
+            'aispeakwrite_sub',
+            'status',
+            'draft',
+            "id = :id AND status = 'pending'",
+            ['id' => $subid]
+        );
+        return count($ops);
+    }
+
     /**
      * The request to send: the pending one for this item (same key and body), or a new one.
      *

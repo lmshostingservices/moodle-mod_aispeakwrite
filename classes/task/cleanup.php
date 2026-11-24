@@ -19,8 +19,8 @@ namespace mod_aispeakwrite\task;
 /**
  * Ends paid requests that never got a definite answer, so no answer text is kept longer than needed.
  *
- * A request still pending after seven days is marked expired, its stored body is emptied, and the learner's answer
- * becomes a draft again so it can be submitted afresh.
+ * A request still pending after 30 minutes is marked expired, its stored body is emptied, and the learner's answer
+ * becomes a draft again so it can be submitted afresh. A marking normally finishes within a minute.
  *
  * @package    mod_aispeakwrite
  * @copyright  2026 LMS Hosting Services
@@ -28,7 +28,7 @@ namespace mod_aispeakwrite\task;
  */
 class cleanup extends \core\task\scheduled_task {
     /** @var int Age after which a pending request is given up. */
-    public const MAXAGE = 7 * DAYSECS;
+    public const MAXAGE = 30 * MINSECS;
 
     /**
      * Task name.
@@ -46,23 +46,18 @@ class cleanup extends \core\task\scheduled_task {
         global $DB;
         $old = $DB->get_records_select(
             'aispeakwrite_op',
-            "state = 'pending' AND timemodified < :cutoff",
+            "state = 'pending' AND timecreated < :cutoff",
             ['cutoff' => time() - self::MAXAGE],
             '',
             'id, kind, itemid'
         );
         foreach ($old as $op) {
-            $DB->update_record(
-                'aispeakwrite_op',
-                (object)['id' => $op->id, 'state' => 'expired', 'body' => '', 'timemodified' => time()]
-            );
-            if ($op->kind === 'mark') {
-                $DB->set_field_select(
-                    'aispeakwrite_sub',
-                    'status',
-                    'draft',
-                    "id = :id AND status = 'pending'",
-                    ['id' => $op->itemid]
+            if (in_array($op->kind, ['mark', 'converse'], true) && $op->itemid) {
+                \mod_aispeakwrite\local\operation::release_submission((int)$op->itemid);
+            } else {
+                $DB->update_record(
+                    'aispeakwrite_op',
+                    (object)['id' => $op->id, 'state' => 'expired', 'body' => '', 'timemodified' => time()]
                 );
             }
         }

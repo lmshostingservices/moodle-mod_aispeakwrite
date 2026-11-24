@@ -393,6 +393,32 @@
     border: 1px solid transparent;
 }
 
+.asw-banner--info:has(.asw-stuckform),
+.asw-banner--info:has(.asw-stuckwait) {
+    flex-wrap: wrap;
+}
+
+.asw-stuckform {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.asw-stuckform span {
+    flex: 1 1 260px;
+}
+
+.asw-stuckwait {
+    flex: 1 1 100%;
+    opacity: 0.8;
+}
+
 .asw-banner--warn {
     background: var(--asw-warn-soft);
     color: var(--asw-warn);

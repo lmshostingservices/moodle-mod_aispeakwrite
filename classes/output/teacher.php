@@ -369,6 +369,37 @@ final class teacher {
             }
             $grid[] = ['name' => fullname($user), 'cells' => $cells];
         }
+        // Answers stuck being marked: the learner can cancel them, and so can a teacher who manages tasks.
+        $stuck = [];
+        if ($userids) {
+            [$in, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+            $params['aid'] = $aid;
+            $pending = $DB->get_records_select(
+                'aispeakwrite_sub',
+                "aispeakwriteid = :aid AND userid $in AND status = 'pending'",
+                $params,
+                'timemodified ASC'
+            );
+            $canclear = has_capability('mod/aispeakwrite:managetasks', $context);
+            foreach ($pending as $s) {
+                if (!operation::cancellable($s)) {
+                    continue;
+                }
+                $started = operation::started((int)$s->id) ?: (int)$s->timemodified;
+                $stuck[] = [
+                    'name' => fullname($users[(int)$s->userid]),
+                    'task' => format_string((string)$DB->get_field('aispeakwrite_task', 'title', ['id' => $s->taskid])),
+                    'draft' => get_string('draftn', self::P, (int)$s->attempt),
+                    'since' => userdate($started, get_string('strftimedatetimeshort', 'langconfig')),
+                    'clearurl' => $canclear ? self::url('unstick.php', ['id' => $cm->id, 'sub' => $s->id]) : '',
+                ];
+            }
+        }
+        $data['stuck'] = $stuck;
+        $data['hasstuck'] = !empty($stuck);
+        $data['stuckcount'] = count($stuck);
+        $data['sesskey'] = sesskey();
+
         // Writing integrity: drafts worth a look, teachers only.
         $flags = [];
         $tasktitles = [];

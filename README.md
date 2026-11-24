@@ -78,7 +78,11 @@ Writing works in every browser.
 - **Limits**: markings per learner per day and rewrites per task.
 - **Test with a sample answer**: marks a pasted text with the current tips (1 credit, not saved as an attempt).
 - **Class analytics**: most common mistakes, which learners keep missing each one, assign practice to them in one
-  step, a learners × tips grid, and credit usage with a low-balance warning.
+  step, a learners × tips grid, answers stuck being marked (with a **Clear** button), and credit usage with a
+  low-balance warning.
+- **Stuck markings**: if an answer has no result after 3 minutes, the learner sees **Cancel and resubmit**; their
+  text stays and they can submit it again. Teachers who manage tasks can clear stuck answers from Class analytics.
+  Anything still waiting after 30 minutes is released automatically.
 
 ## Writing integrity
 
@@ -112,7 +116,7 @@ be marked.
 Stored: drafts and marked answers (with feedback and scores, and per draft the paste, stopped-paste and
 screen-leaving counts and the rewrite check result), each learner's focus-area record, assignments, and a
 record of each paid request (its body is kept only while it is being sent, then emptied; requests still pending after
-seven days are ended by a scheduled task).
+30 minutes are ended by a scheduled task that runs every 15 minutes).
 
 Sent to LMS Labs: the answer text or transcript, the task, the school's tips, speaking time and pauses, the learner's
 open focus areas (tip and pattern names only) and the feedback language. No name, email or user id is sent.
