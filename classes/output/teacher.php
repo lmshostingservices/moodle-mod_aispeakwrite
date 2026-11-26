@@ -106,7 +106,8 @@ final class teacher {
                 'analyticsurl' => (new \moodle_url('/mod/aispeakwrite/analytics.php', ['id' => $cm->id]))->out(false),
                 'settingsurl' => (new \moodle_url('/course/modedit.php', ['update' => $cm->id]))->out(false),
                 'notasks' => !$tasks,
-                'credentialsmissing' => \mod_aispeakwrite\local\credentials::find() === null,
+                'credentialsmissing' => \mod_aispeakwrite\local\credentials::find() === null
+                    && !\mod_aispeakwrite\byok::uses_own_ai(),
             ]
         );
     }

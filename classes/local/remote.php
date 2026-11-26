@@ -80,6 +80,10 @@ final class remote {
      * @throws \moodle_exception remoteuncertain when no answer arrived
      */
     public static function request(string $path, ?array $body = null, string $key = '', int $timeout = 60): array {
+        // Bring your own AI: markings run on the site's own AI, with the service's prompts and checks, at no charge.
+        if ($path === self::MARK && \mod_aispeakwrite\byok::uses_own_ai()) {
+            return \mod_aispeakwrite\byok::mark($body ?? []);
+        }
         $started = time();
         $answer = self::send($path, $body, $key, $timeout);
         // LMS Labs refuses a site that hasn't switched this plugin on yet (403 NO_ENTITLEMENT). Switching it on is
@@ -271,7 +275,7 @@ final class remote {
             $code = 'IDEMPOTENCY_CONFLICT';
         }
         $known = ['INSUFFICIENT_CREDITS', 'NO_ENTITLEMENT', 'INVALID_CREDENTIALS', 'RATE_LIMITED', 'NOT_LIVE',
-            'IDEMPOTENCY_CONFLICT'];
+            'IDEMPOTENCY_CONFLICT', 'BYOK_FAILED'];
         $key = in_array($code, $known, true) ? 'remoterefused_' . strtolower($code) : 'remoteerror';
         throw new \moodle_exception($key, 'mod_aispeakwrite', '', $code);
     }

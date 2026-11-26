@@ -67,12 +67,21 @@ if ($ADMIN->fulltree) {
         );
     }
 
+    // Bring your own AI: say that markings run on the site's own AI.
+    $ownai = '';
+    if (\mod_aispeakwrite\byok::uses_own_ai()) {
+        $ownicon = \html_writer::tag('i', '', ['class' => 'fa fa-microchip me-2', 'aria-hidden' => 'true']);
+        $ownai = \html_writer::div(
+            $ownicon . s(get_string('byok_settings', $p)),
+            'alert alert-success d-flex align-items-center py-2 mt-3 mb-0'
+        );
+    }
     $settings->add(
         new admin_setting_heading(
             'mod_aispeakwrite/lmslabsheading',
             get_string('lmslabsheading', $p),
             get_string('lmslabsheading_desc', $p) . ' ' .
-            get_string(\mod_aispeakwrite\local\credentials::status(), $p)
+            get_string(\mod_aispeakwrite\local\credentials::status(), $p) . $ownai
         )
     );
     $settings->add(

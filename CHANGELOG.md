@@ -3,6 +3,18 @@
 All notable changes to this plugin are documented here, newest first. This project follows
 [Semantic Versioning](https://semver.org/).
 
+## 1.1.0 - 2026-11-26
+
+- **Bring your own AI.** With an LMS Labs Bring your own AI licence and Text set to Moodle AI or the site's own key in
+  AI Grader Central Config, answers are marked on the site's own AI and use no LMS Labs credits. The LMS Labs marking
+  service's prompts, two marking stages (evidence, then scores), response schemas and every check and repair of the
+  AI's answers are ported into the plugin and were compared with the service's code on over 20,000 generated cases.
+  Teacher test markings work the same way. If the site's AI can't produce a usable marking, nothing is charged and the
+  learner can simply try again.
+- The plugin settings page says when Bring your own AI is on; the "no LMS Labs credentials" notice on the teacher page
+  is hidden while it is.
+- Two new strings in all 18 interface languages. No database changes.
+
 ## 1.0.11 - 2026-11-24
 
 - **Fixed: learners could be stuck on "This answer is still being marked".** When a marking never got a result,
