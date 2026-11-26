@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_aispeakwrite';
-$plugin->version   = 2026112400;
-$plugin->release   = '1.0.11';
+$plugin->version   = 2026112600;
+$plugin->release   = '1.1.0';
 $plugin->requires  = 2024042200; // Moodle 4.4.
 $plugin->supported = [404, 503];
 $plugin->maturity  = MATURITY_STABLE;

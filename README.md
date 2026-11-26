@@ -29,6 +29,13 @@ To connect a site: get a Site ID and API key from your LMS Labs account, then en
 Config** (`local_aiconfig`), or in this plugin's settings (Site administration › Plugins › Activity modules › AI Advent
 Speaking and Writing). Without them, everything except marking still works (tasks, drafts, reports).
 
+## Bring your own AI
+
+With an LMS Labs Bring your own AI licence, set **Text** to Moodle AI or your own key in **AI Grader Central Config**
+(`local_aiconfig`). Answers are then marked on your site's own AI, straight from your Moodle site to the AI provider,
+and use no LMS Labs credits. The plugin sends the same prompts and runs the same two marking stages and checks as the
+LMS Labs service. Conversation practice (the AI partner) is not part of this.
+
 ## What learners see
 
 - **Dashboard**: readiness, a "continue" card for a rewrite or draft, the recommended next task, skill bars per
